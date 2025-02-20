@@ -63,23 +63,37 @@
 }
 
 .chat-input-wrapper {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 10px;
+  padding: 0;
 }
 
 .chat-send-button {
-  margin-left: 8px;
-  background: none;
-  border: none;
+  margin: 0;
+  background: #FDE8EF;
+  border: 1px solid #E61C5D;
   cursor: pointer;
   padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4.5px;
   transition: transform 0.2s;
 }
 
 .chat-send-button:hover {
   transform: scale(1.05);
+}
+
+.chat-send-button img {
+  width: 16px;
+  height: 16px;
 }
 
 .chips-container {
@@ -230,25 +244,30 @@
 }
 
 .send-button {
-  background: none;
-  border: none;
+  margin: 0;
+  background: #FDE8EF;
+  border: 1px solid #E61C5D;
   cursor: pointer;
   padding: 0;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
   border-radius: 4.5px;
-  transition: transform 0.2s;
   position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 10px;
+  bottom: 10px;
+  transition: transform 0.2s;
 }
 
 .send-button:hover {
-  transform: translateY(-50%) scale(1.05);
+  transform: scale(1.05);
+}
+
+.send-button img {
+  width: 16px;
+  height: 16px;
 }
 
 .icon-send {

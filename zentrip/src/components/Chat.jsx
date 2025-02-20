@@ -8,10 +8,10 @@ import {
   useMotionValue,
   useTransform,
 } from 'framer-motion';
-import iconSend from '../assets/icons/icon-send.svg'; // Importar el SVG de enviar
+import iconSend from '../assets/icons/icon-send.svg';
 import iconSparkle from '../assets/icons/icon-Sparkle.svg';
-import iconUser from '../assets/icons/icon-user.svg'; // Importar el SVG del usuario
-import iconAI from '../assets/icons/icon-Sparkle.svg'; // Importar el SVG de la IA
+import iconUser from '../assets/icons/icon-user.svg';
+import iconAI from '../assets/icons/icon-Sparkle.svg';
 
 const MovingBorder = ({ children, duration = 2000, rx, ry, ...otherProps }) => {
   const pathRef = React.useRef();
@@ -74,6 +74,7 @@ const Chat = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const containerRef = useRef(null);
   const [scrollX, setScrollX] = useState(0);
+  
   const chips = [
     '5 días por Escocia',
     'Una semana por Roma',
@@ -122,6 +123,7 @@ const Chat = () => {
       setInputValue('');
       setIsTyping(true);
       setIsExpanded(true);
+      
       setTimeout(() => {
         setIsTyping(false);
         setMessages((prevMessages) => [
@@ -177,100 +179,52 @@ const Chat = () => {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
           />
-          <button className="send-button" onClick={handleSendMessage}>
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect
-                x="0.5"
-                y="0.5"
-                width="31"
-                height="31"
-                rx="4.5"
-                fill="#FDE8EF"
-              />
-              <rect
-                x="0.5"
-                y="0.5"
-                width="31"
-                height="31"
-                rx="4.5"
-                stroke="#E61C5D"
-              />
-              <image href={iconSend} width="16" height="16" x="8" y="8" />
-            </svg>
+          <button className="send-button" onClick={() => handleSendMessage()}>
+            <img src={iconSend} alt="Send Icon" className="icon-send" />
           </button>
         </div>
       </div>
     );
-  } else {
-    return (
-      <div className="chat-container">
-        <div className="chat-wrapper">
-          <div className="chat-background">
-            <MovingBorder duration={5000} rx="30%" ry="30%">
-              <div className="moving-gradient" />
-            </MovingBorder>
-          </div>
-          <div className="chat-content">
-            <textarea
-              className="chat-textarea"
-              placeholder="Mensaje..."
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-            />
-            <div className="chat-input-wrapper">
-              <button className="send-button" onClick={handleSendMessage}>
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 32 32"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="0.5"
-                    y="0.5"
-                    width="31"
-                    height="31"
-                    rx="4.5"
-                    fill="#FDE8EF"
-                  />
-                  <rect
-                    x="0.5"
-                    y="0.5"
-                    width="31"
-                    height="31"
-                    rx="4.5"
-                    stroke="#E61C5D"
-                  />
-                  <image href={iconSend} width="16" height="16" x="8" y="8" />
-                </svg>
-              </button>
-            </div>
-          </div>
+  }
+
+  return (
+    <div className="chat-container">
+      <div className="chat-wrapper">
+        <div className="chat-background">
+          <MovingBorder duration={5000} rx="30%" ry="30%">
+            <div className="moving-gradient" />
+          </MovingBorder>
         </div>
-        <div className="chips-container" ref={containerRef}>
-          <div className="chips-scroll">
-            {chips.concat(chips).map((chip, index) => (
-              <button
-                key={index}
-                className="chip"
-                onClick={() => handleChipClick(chip)}
-              >
-                {chip}
-              </button>
-            ))}
+        <div className="chat-content">
+          <textarea
+            className="chat-textarea"
+            placeholder="Mensaje..."
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+          />
+          <div className="chat-input-wrapper">
+            <button className="chat-send-button" onClick={() => handleSendMessage()}>
+              <img src={iconSend} alt="Send Icon" className="icon-send" />
+            </button>
           </div>
         </div>
       </div>
-    );
-  }
+      <div className="chips-container" ref={containerRef}>
+        <div className="chips-scroll">
+          {chips.concat(chips).map((chip, index) => (
+            <button
+              key={index}
+              className="chip"
+              onClick={() => handleChipClick(chip)}
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Chat;
