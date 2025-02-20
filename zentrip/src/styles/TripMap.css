@@ -1,0 +1,53 @@
+.trip-map-container {
+    @apply w-full h-[600px] rounded-xl overflow-hidden shadow-lg border border-gray-200;
+  }
+  
+  .trip-map {
+    @apply w-full h-full;
+  }
+  
+  /* Estilos para la lista de ubicaciones */
+  .locations-list {
+    @apply h-[600px] overflow-y-auto; /* Misma altura que el mapa */
+  }
+  
+  /* Estilizar los marcadores */
+  .marker-content {
+    @apply w-8 h-8 bg-[#E61C5D] rounded-full 
+           flex items-center justify-center text-white font-bold text-sm
+           border-2 border-white shadow-md;
+  }
+  
+  /* Estilizar los popups */
+  .marker-popup {
+    @apply p-3 max-w-[250px];
+  }
+  
+  .marker-popup h3 {
+    @apply font-bold text-lg mb-2 text-[#E61C5D];
+  }
+  
+  .marker-popup p {
+    @apply text-sm text-gray-600 mb-1;
+  }
+  
+  /* Estilos para los items de la lista */
+  .location-item {
+    @apply p-4 mb-3 rounded-lg bg-white hover:bg-gray-50 
+           border-l-4 border-[#E61C5D] shadow-sm
+           transition-all duration-200 cursor-pointer;
+  }
+  
+  .location-item:hover {
+    @apply transform translate-x-1;
+  }
+  
+  /* Estilizar los botones de filtro */
+  .days-filter button {
+    @apply px-4 py-2 rounded-full text-sm font-medium 
+           transition-all duration-200 min-w-[80px];
+  }
+  
+  .days-filter button:hover {
+    @apply transform scale-105;
+  }

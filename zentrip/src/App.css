@@ -1,0 +1,36 @@
+/* Asegura que el contenedor principal ocupe toda la pantalla */
+#root {
+  @apply w-full h-screen flex flex-col;
+}
+
+.app-container {
+  @apply flex flex-col w-full h-full;
+}
+
+.content-wrapper {
+  @apply flex-grow w-full h-full flex justify-center items-center;
+}
+
+/* src/styles/app.css */
+
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/Archivo-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: bold;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/Archivo-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+body {
+  font-family: "Archivo", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

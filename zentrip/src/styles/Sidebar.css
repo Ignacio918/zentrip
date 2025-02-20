@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.sidebar {
+    @apply fixed top-0 left-0 w-full md:w-64 h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out z-50;
+    @apply md:translate-x-0 transform -translate-x-full;
+  }
+  
+  .sidebar.open {
+    @apply translate-x-0;
+  }
+  
+  @media (max-width: 767px) {
+    .sidebar {
+      @apply mt-16 border border-[#F3F4F6];
+      height: auto;
+      min-height: 420px;
+      width: calc(100% - 32px);
+      max-width: 300px;
+      left: -100%;
+      border-radius: 0 20px 20px 20px;
+    }
+  
+    .sidebar.open {
+      left: 16px;
+    }
+  }
+  
+  .logo-container {
+    @apply p-6 flex items-center;
+  }
+  
+  .logo-wrapper {
+    @apply flex items-center gap-2;
+  }
+  
+  .logo-icon {
+    @apply w-8 h-8;
+  }
+  
+  .logo-text-img {
+    @apply h-6 w-auto;
+  }
+  
+  .menu {
+    @apply flex-grow px-4 py-2;
+  }
+  
+  .logout {
+    @apply p-4 border-t border-gray-200;
+  }
+  
+  .dashboard-menu-item {
+    @apply w-full h-10 px-2.5 py-2 flex items-center gap-3.5 rounded-[20px] transition-all duration-200 text-[#161616] no-underline;
+  }
+  
+  .dashboard-menu-item:hover {
+    @apply bg-[#F3F4F6];
+  }
+  
+  .dashboard-menu-item.active {
+    @apply text-[#E61C5D];
+  }
+  
+  .menu-icon {
+    @apply w-5 h-5;
+    filter: brightness(0) saturate(100%) invert(8%) sepia(10%) saturate(200%) hue-rotate(169deg) brightness(95%)
+      contrast(85%);
+  }
+  
+  .dashboard-menu-item.active .menu-icon {
+    filter: brightness(0) saturate(100%) invert(21%) sepia(99%) saturate(7414%) hue-rotate(335deg) brightness(94%)
+      contrast(97%);
+  }
+  
+  .menu-text {
+    @apply text-base font-normal font-['Urbanist'];
+  }
+  
+  .mobile-header {
+    @apply md:hidden flex justify-between items-center bg-white p-4 h-16 w-full;
+  }
+  
+  .toggle-button {
+    @apply w-8 h-8 flex items-center justify-center rounded-full;
+  }
+  
+  .toggle-button.open {
+    @apply bg-[#F3F4F6];
+  }
+  
+  .close-icon,
+  .menu-icon {
+    @apply w-6 h-6;
+  }
+  
+  .close-icon path {
+    @apply stroke-[#161616] stroke-2;
+  }
+  
+  .menu-icon path {
+    @apply fill-[#161616];
+  }
+  
+  .logo-container-mobile {
+    @apply flex items-center gap-1 absolute left-1/2 transform -translate-x-1/2;
+  }
+  
+  @media (max-width: 767px) {
+    .logo-container,
+    .menu,
+    .logout {
+      @apply px-4;
+    }
+  }
+  
+  

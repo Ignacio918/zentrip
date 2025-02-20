@@ -1,0 +1,11 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "@fontsource/urbanist";
+
+
+/* Aquí puedes agregar estilos personalizados */
+body {
+  font-family: 'Inter', sans-serif;
+}

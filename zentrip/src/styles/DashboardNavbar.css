@@ -1,0 +1,27 @@
+.dashboard-navbar {
+    @apply h-[72px] px-11 py-6 bg-[#FDFDFD] border-b border-[#F3F4F6] flex justify-between items-center;
+  }
+  
+  .dashboard-navbar__title {
+    @apply text-[#161616] text-xl font-medium font-['Urbanist'];
+  }
+  
+  .dashboard-navbar__actions {
+    @apply flex items-center gap-4;
+  }
+  
+  .dashboard-navbar__notification-btn {
+    @apply w-7 h-7 p-[10px] bg-[#F3F4F6] rounded-full flex justify-center items-center;
+  }
+  
+  .dashboard-navbar__avatar {
+    @apply w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium;
+  }
+  
+  @screen md {
+    .dashboard-navbar {
+      @apply ml-64;
+    }
+  }
+  
+  

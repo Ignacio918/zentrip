@@ -1,0 +1,125 @@
+/* Base Styles for Input */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.textfield-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 500px; /* Ajuste máximo de 500px */
+}
+
+.textfield-label {
+  font-size: 14px;
+  font-family: "Urbanist", sans-serif;
+  font-weight: 600;
+  color: #292929; /* Color original del diseño */
+}
+
+.textfield-input-container {
+  width: 100%;
+  height: 44px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Alinear contenido verticalmente al centro */
+  overflow: hidden;
+  border: 1px solid #a8a8a8;
+}
+
+.textfield-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: "Urbanist", sans-serif;
+  font-weight: 400;
+  color: #3e3e3e; /* Color del texto */
+}
+
+.textfield-input:focus {
+  color: #3e3e3e; /* Color del texto cuando se está escribiendo */
+}
+
+.textfield-icon {
+  display: flex;
+  align-items: center; /* Alinear icono verticalmente al centro */
+  justify-content: center;
+}
+
+.textfield-icon img {
+  width: 20px; /* Ajusta el tamaño del icono según sea necesario */
+  height: 20px;
+}
+
+/* State: Enabled */
+.textfield-input-container.enabled {
+  border-color: #a8a8a8;
+}
+
+.textfield-input-container.enabled:hover {
+  border-color: #161616; /* Cambiar el color del borde en hover */
+}
+
+/* State: Selected */
+.textfield-input-container.selected {
+  border-color: #161616;
+}
+
+.textfield-input.selected {
+  color: #3e3e3e; /* Color del texto cuando se está escribiendo */
+}
+
+/* State: Disabled */
+.textfield-label.disabled,
+.textfield-input.disabled,
+.textfield-icon.disabled {
+  color: #a8a8a8;
+}
+
+.textfield-input-container.disabled {
+  border-color: #a8a8a8;
+  pointer-events: none;
+}
+
+/* State: Error */
+.textfield-input-container.error {
+  border-color: #ff6893;
+}
+
+.textfield-input.error {
+  color: #ff6893; /* Color del texto cuando hay error */
+}
+
+/* State: Success */
+.textfield-input-container.success {
+  border-color: #a8d5ba;
+}
+
+.textfield-helper-text {
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.text-error {
+  color: #dc2626; /* color rojo para errores */
+}
+
+.text-success {
+  color: #16a34a; /* color verde para éxito */
+}
+
+.textfield-input-container.success {
+  border-color: #16a34a;
+}
+
+.textfield-input-container.success:focus-within {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 1px #16a34a;
+}
