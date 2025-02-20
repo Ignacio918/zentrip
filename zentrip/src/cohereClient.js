@@ -42,7 +42,9 @@ const generateItinerary = async (message) => {
                  3. Si ya has proporcionado información en mensajes anteriores, referénciala y expándela
                  4. SIEMPRE responde en el mismo idioma que usa el usuario
                  5. Da respuestas detalladas y específicas para el destino que se está discutiendo
-                 6. Si ocurre un error, intenta mantener el contexto de la conversación`,
+                 6. Si ocurre un error, intenta mantener el contexto de la conversación
+                 7. Para títulos importantes, usar el formato: <h>Título</h>
+                 8. Ejemplo: "<h>Atracciones Turísticas</h>" en lugar de "**Atracciones Turísticas**"`,
       temperature: 0.7,
       maxTokens: 1000,
       k: 40,
@@ -50,7 +52,11 @@ const generateItinerary = async (message) => {
     });
 
     if (response && response.text) {
-      let finalResponse = response.text;
+      // Formatear los títulos manteniendo todo el resto igual
+      let finalResponse = response.text.replace(
+        /<h>(.*?)<\/h>/g,
+        '<span class="text-black font-archivo text-lg font-semibold leading-relaxed block mb-2">$1</span>'
+      );
       if (!finalResponse.includes("Zen - Tu Asistente de Viajes")) {
         finalResponse += "\n\nZen - Tu Asistente de Viajes";
       }
