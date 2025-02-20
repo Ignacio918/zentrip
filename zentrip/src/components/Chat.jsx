@@ -12,6 +12,7 @@ import iconSend from '../assets/icons/icon-send.svg';
 import iconSparkle from '../assets/icons/icon-Sparkle.svg';
 import iconUser from '../assets/icons/icon-user.svg';
 import iconAI from '../assets/icons/icon-Sparkle.svg';
+import generateItinerary from '../cohereClient';
 
 const MovingBorder = ({ children, duration = 2000, rx, ry, ...otherProps }) => {
   const pathRef = React.useRef();
@@ -74,6 +75,15 @@ const Chat = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const containerRef = useRef(null);
   const [scrollX, setScrollX] = useState(0);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
   
   const chips = [
     '5 días por Escocia',
@@ -117,23 +127,34 @@ const Chat = () => {
     setInputValue(e.target.value);
   };
 
-  const handleSendMessage = (message = inputValue) => {
+  const handleSendMessage = async (message = inputValue) => {
     if (message.trim() !== '') {
       setMessages([...messages, { text: message, sender: 'user' }]);
       setInputValue('');
       setIsTyping(true);
       setIsExpanded(true);
       
-      setTimeout(() => {
+      try {
+        const response = await generateItinerary(message);
         setIsTyping(false);
         setMessages((prevMessages) => [
           ...prevMessages,
           {
-            text: `Respuesta a: ${message}`,
+            text: response,
             sender: 'ai',
           },
         ]);
-      }, 1000);
+      } catch (error) {
+        console.error('Error al obtener respuesta:', error);
+        setIsTyping(false);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            text: "Lo siento, hubo un error al procesar tu mensaje. ¿Podrías intentarlo de nuevo?",
+            sender: 'ai',
+          },
+        ]);
+      }
     }
   };
 
@@ -158,18 +179,23 @@ const Chat = () => {
               key={index}
               className={`chat-message ${msg.sender === 'user' ? 'user-message' : 'ai-message'}`}
             >
-              <div className="message-icon">
-                {msg.sender === 'user' ? (
-                  <img src={iconUser} alt="User Icon" className="icon-user" />
-                ) : (
-                  <img src={iconAI} alt="AI Icon" className="icon-ai" />
-                )}
-              </div>
+              
               <div className="message-content">
                 <div className="message-text">{msg.text}</div>
               </div>
             </div>
           ))}
+          {isTyping && (
+            <div className="chat-message ai-message">
+              <div className="message-icon">
+                <img src={iconAI} alt="AI Icon" className="icon-ai" />
+              </div>
+              <div className="message-content">
+                <div className="message-text typing">Escribiendo...</div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
         <div className="chat-input-container">
           <input
@@ -227,4 +253,4 @@ const Chat = () => {
   );
 };
 
-export default Chat;
+export default Chat; 

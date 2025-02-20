@@ -96,6 +96,7 @@
   height: 16px;
 }
 
+/* Estilos para los chips */
 .chips-container {
   width: 720px;
   display: inline-flex;
@@ -130,15 +131,7 @@
   background-color: #f3f4f6;
 }
 
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
+/* Estilos para el chat expandido */
 .chat-expanded {
   width: 1098px;
   height: 523px;
@@ -161,6 +154,12 @@
   margin-bottom: 20px;
 }
 
+.chat-header .icon-sparkle {
+  width: 20px;
+  height: 20px;
+  color: #3E3E3E;
+}
+
 .chat-divider {
   width: 100%;
   height: 1px;
@@ -172,37 +171,49 @@
   flex: 1;
   overflow-y: auto;
   margin-bottom: 20px;
+  padding-right: 10px;
 }
 
+/* Estilos base para mensajes */
 .chat-message {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 15px;
+  margin-bottom: 24px;
+  gap: 12px;
+  padding: 0 10px;
 }
 
+.message-content {
+  max-width: 90%;
+  border-radius: 5px;
+  padding: 16px;
+}
+
+.message-text {
+  color: #3e3e3e;
+  font-size: 16px;
+  font-family: 'Archivo', sans-serif;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Mensajes del usuario (alineados a la derecha) */
 .user-message {
   justify-content: flex-end;
 }
 
+.user-message .message-content {
+  background-color: #FFFBF2;
+  border: 1px solid #FFF2D6;
+}
+
+.user-message .message-text {
+  text-align: right;
+}
+
+/* Mensajes de la IA (alineados a la izquierda) */
 .ai-message {
   justify-content: flex-start;
-}
-
-.message-icon {
-  width: 20px;
-  height: 20px;
-  margin-right: 10px;
-}
-
-.message-content {
-  max-width: 70%;
-  padding: 10px;
-  border-radius: 5px;
-}
-
-.user-message .message-content {
-  background-color: #fefbf6;
-  border: 1px solid #fff2d6;
 }
 
 .ai-message .message-content {
@@ -210,40 +221,38 @@
   border: 1px solid #c2c3c5;
 }
 
-.message-text {
-  color: #3e3e3e;
-  font-size: 16px;
-  font-family: 'Archivo', sans-serif;
-}
-
+/* Estilos para el contenedor de entrada */
 .chat-input-container {
-  width: 1050px;
+  width: 100%;
   height: 60px;
   padding: 3.5px;
   border-radius: 5px;
   border: 1px solid #dbdcdd;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   position: relative;
+  background-color: #fff;
 }
 
 .chat-input-container input {
   flex: 1;
+  height: 100%;
+  padding: 0 14px;
   border: none;
   outline: none;
-  background-color: transparent;
+  background: none;
   color: #3e3e3e;
   font-size: 16px;
   font-family: 'Archivo', sans-serif;
-  padding: 0 14px;
 }
 
 .chat-input-container input::placeholder {
-  color: rgba(0, 0, 0, 0.2);
+  color: #979797;
 }
 
 .send-button {
+  position: absolute;
+  right: 10px;
   margin: 0;
   background: #FDE8EF;
   border: 1px solid #E61C5D;
@@ -255,9 +264,6 @@
   align-items: center;
   justify-content: center;
   border-radius: 4.5px;
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
   transition: transform 0.2s;
 }
 
@@ -270,7 +276,76 @@
   height: 16px;
 }
 
-.icon-send {
-  width: 16px;
-  height: 16px;
+/* Personalización del scroll */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #dbdcdd;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #c2c3c5;
+}
+
+/* Animaciones */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes blink {
+  0% { opacity: .2; }
+  20% { opacity: 1; }
+  100% { opacity: .2; }
+}
+
+.typing span {
+  animation-name: blink;
+  animation-duration: 1.4s;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.typing span:nth-child(2) {
+  animation-delay: .2s;
+}
+
+.typing span:nth-child(3) {
+  animation-delay: .4s;
+}
+
+/* Estilos responsivos */
+@media (max-width: 1200px) {
+  .chat-expanded {
+    width: 100%;
+    max-width: 900px;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-container {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+  
+  .chips-container {
+    width: 100%;
+  }
+  
+  .chat-expanded {
+    height: calc(100vh - 40px);
+    padding: 16px;
+  }
+  
+  .message-content {
+    max-width: 85%;
+  }
 }
