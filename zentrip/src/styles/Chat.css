@@ -350,14 +350,16 @@
   }
 }
 
+/* Agregar al final del archivo Chat.css */
+
 .message-title {
   display: block;
-  margin: 1rem 0 0.5rem 0;
-  color: #161616;
+  margin: 1rem 0;
+  color: #000000;
   font-family: 'Archivo', sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  line-height: normal;
-  padding-left: 1rem;
+  line-height: 1.5;
+  padding-left: 12px;
   border-left: 3px solid #E61C5D;
 }
