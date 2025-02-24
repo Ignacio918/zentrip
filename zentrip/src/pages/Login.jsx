@@ -1,4 +1,3 @@
-// src/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
@@ -6,7 +5,7 @@ import GoogleIcon from "../assets/icons/devicon_google.svg";
 import EyeIcon from "../assets/icons/eye.svg";
 import EyeOffIcon from "../assets/icons/eye-slash.svg";
 import Logo from "../assets/logo_medium.svg";
-import TextField from "../components/TextField"; // ✅ Volvemos a importar TextField
+import TextField from "../components/TextField";
 import "../styles/LoginPage.css";
 
 const LoginPage = ({ onAuthSuccess }) => {
@@ -23,7 +22,7 @@ const LoginPage = ({ onAuthSuccess }) => {
     setError("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -31,8 +30,10 @@ const LoginPage = ({ onAuthSuccess }) => {
       if (error) {
         setError(error.message);
       } else {
-        onAuthSuccess && onAuthSuccess();
-        navigate("/dashboard");
+        if (onAuthSuccess) {
+          onAuthSuccess(); // Llamar a onAuthSuccess para manejar la autenticación en el componente padre
+        }
+        navigate("/dashboard"); // Redirigir al dashboard
       }
     } catch (error) {
       setError("Ocurrió un error al intentar iniciar sesión");
@@ -41,9 +42,22 @@ const LoginPage = ({ onAuthSuccess }) => {
     }
   };
 
-  // ✅ Nueva función para redirigir a /register
-  const handleRegisterClick = () => {
-    navigate("/register");
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin + "/dashboard" },
+      });
+
+      if (error) setError(error.message);
+    } catch (error) {
+      setError("Ocurrió un error al intentar iniciar sesión con Google");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -125,7 +139,7 @@ const LoginPage = ({ onAuthSuccess }) => {
 
           <div className="auth-login-link">
             <span className="auth-text">¿Aún no te unes?</span>
-            <span className={`auth-link ${isLoading ? "pointer-events-none opacity-50" : ""}`} onClick={handleRegisterClick} role="button">
+            <span className={`auth-link ${isLoading ? "pointer-events-none opacity-50" : ""}`} onClick={() => navigate("/register")} role="button">
               Regístrate ahora
             </span>
           </div>
