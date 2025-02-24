@@ -1,9 +1,8 @@
-// src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import DashboardNavbar from "../components/DashboardNavbar";
-import TripMap from "../components/TripMap"; // Asegúrate de que este archivo existe o coméntalo
+import { motion } from "framer-motion";
 import "../styles/Dashboard.css";
 import { supabase } from "../supabaseClient";
 
@@ -12,7 +11,7 @@ const Dashboard = () => {
   const pageName = getPageName(location.pathname);
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
-  const [selectedDay, setSelectedDay] = useState();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const getUserData = async () => {
@@ -47,26 +46,77 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="error-container">
-        <h2>Error en el Dashboard:</h2>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Reintentar</button>
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="error-container min-h-screen bg-[#F5F2FF] flex flex-col items-center justify-center p-8"
+      >
+        <h2 className="text-2xl font-bold text-[#3B325B] mb-4 font-['Archivo']">Error en el Dashboard:</h2>
+        <p className="text-lg text-[#3B325B] mb-6 font-['Archivo']">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="inline-flex h-9 items-center justify-center rounded-full bg-[#2E2E2E] px-4 py-2 text-sm font-medium text-white hover:bg-[#4A4A4A] transition-colors font-['Archivo']"
+        >
+          Reintentar
+        </button>
+      </motion.div>
     );
   }
 
   if (!user) {
-    return <div className="loading">Cargando...</div>;
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="loading min-h-screen bg-[#F5F2FF] flex items-center justify-center text-[#3B325B] text-lg font-['Archivo']"
+      >
+        Cargando...
+      </motion.div>
+    );
   }
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   return (
     <div className="dashboard">
-      <Sidebar />
+      <motion.div
+        initial={{ x: "-100%" }}
+        animate={{ x: isSidebarOpen ? "0%" : "-100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`sidebar ${isSidebarOpen ? "open" : ""}`}
+      >
+        <Sidebar />
+      </motion.div>
       <div className="dashboard-content">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mobile-header"
+        >
+          <button
+            onClick={toggleSidebar}
+            className="toggle-button"
+          >
+            <Menu className="w-6 h-6 text-[#3B325B]" />
+          </button>
+          <div className="logo-container-mobile">
+            <img src={logoSmall} className="w-8 h-8" alt="zentrip logo" />
+          </div>
+        </motion.div>
         <DashboardNavbar pageName={pageName} userName={user.name || "Usuario"} />
-        <div className="dashboard-content__main">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="dashboard-content__main"
+        >
           <Outlet />
-        </div>
+        </motion.div>
       </div>
     </div>
   );

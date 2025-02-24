@@ -1,95 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .dashboard {
-    @apply flex flex-col md:flex-row min-h-screen bg-gray-100;
-  }
-  
+  @apply flex flex-col md:flex-row min-h-screen bg-[#F5F2FF];
+}
+
+.dashboard-content {
+  @apply flex-grow overflow-y-auto w-full pt-16 md:pt-[72px];
+}
+
+@media (min-width: 768px) {
   .dashboard-content {
-    @apply flex-grow overflow-y-auto w-full pt-16 md:pt-[72px];
+    @apply ml-64;
   }
-  
-  @media (min-width: 768px) {
-    .dashboard-content {
-      @apply ml-64;
-    }
-  }
-  
-  .dashboard-content h1 {
-    @apply text-2xl font-bold mb-4;
-  }
-  
-  .dashboard-content p {
-    @apply text-lg;
-  }
-  
-  /* Estilos para el navbar */
+}
+
+.dashboard-content h1 {
+  @apply text-2xl font-bold mb-4 text-[#3B325B] font-['Archivo'];
+}
+
+.dashboard-content p {
+  @apply text-lg text-[#3B325B] font-['Archivo'];
+}
+
+/* Estilos para el navbar */
+.dashboard-navbar {
+  @apply h-[72px] px-11 py-6 bg-[#FDFDFD]/90 border-b border-[#F3F4F6] flex justify-between items-center fixed top-0 right-0 left-0;
+  display: none;
+}
+
+.dashboard-navbar__title {
+  @apply text-[#3B325B] text-xl font-medium font-['Archivo'];
+}
+
+.dashboard-navbar__actions {
+  @apply flex items-center gap-4;
+}
+
+.dashboard-navbar__notification-btn {
+  @apply w-7 h-7 p-[10px] bg-[#F3F4F6] rounded-full flex justify-center items-center;
+}
+
+.dashboard-navbar__notification-icon {
+  @apply w-6 h-6 text-[#3B325B];
+}
+
+.dashboard-navbar__avatar {
+  @apply w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-[#3B325B] font-medium font-['Archivo'];
+}
+
+@media (min-width: 768px) {
   .dashboard-navbar {
-    @apply h-[72px] px-11 bg-[#FDFDFD] border-b border-[#F3F4F6] justify-between items-center fixed top-0 right-0 left-0;
+    @apply left-64 w-[calc(100%-16rem)];
+    display: flex;
+  }
+}
+
+/* Estilos para el encabezado móvil */
+.mobile-header {
+  @apply md:hidden flex justify-between items-center bg-[#F5F2FF] p-4 h-16 w-full fixed top-0 left-0 right-0 z-50;
+  backdrop-filter: blur(8px);
+}
+
+@media (min-width: 768px) {
+  .mobile-header {
     display: none;
   }
-  
-  .dashboard-navbar__title {
-    @apply text-[#161616] text-xl font-medium font-['Urbanist'];
-  }
-  
-  .dashboard-navbar__actions {
-    @apply flex items-center gap-4;
-  }
-  
-  .dashboard-navbar__notification-btn {
-    @apply w-7 h-7 bg-[#F3F4F6] rounded-full flex justify-center items-center;
-  }
-  
-  .dashboard-navbar__notification-icon {
-    @apply w-6 h-6;
-  }
-  
-  .dashboard-navbar__avatar {
-    @apply w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium;
-  }
-  
-  @media (min-width: 768px) {
-    .dashboard-navbar {
-      @apply left-64 w-[calc(100%-16rem)];
-      display: flex;
-    }
-  }
-  
-  /* Estilos para el encabezado móvil */
-  .mobile-header {
-    @apply flex justify-between items-center bg-white p-4 h-16 w-full fixed top-0 left-0 right-0 z-50;
-  }
-  
-  @media (min-width: 768px) {
-    .mobile-header {
-      display: none;
-    }
-  }
-  
-  /* Estilos para el header del dashboard */
-  .dashboard-header {
-    @apply mb-8 mt-8 ml-11; /* Ajustado el margen izquierdo a 44px y margen superior a 32px */
-  }
-  
-  .dashboard-header__title {
-    @apply text-[28px] font-bold text-[#161616] font-['Urbanist'] mb-3.5; /* Ajustado el margen inferior a 14px */
-  }
-  
-  .dashboard-header__subtitle {
-    @apply text-lg font-medium text-[#3E3E3E] font-['Urbanist'];
-  }
-  
-  .user-name {
-    @apply text-[#161616];
-  }
-  
-  .days-remaining {
-    @apply text-[#E61C5D] font-bold;
-  }
-  
-  /* Eliminamos cualquier margen o padding de dashboard-content__main */
-  .dashboard-content__main {
-    @apply m-0 p-0;
-  }
-  
-  .highlight {
-    @apply text-[#E61C5D]  font-medium;
-  }
+}
+
+/* Estilos para el header del dashboard */
+.dashboard-header {
+  @apply mb-8 mt-8 ml-11;
+}
+
+.dashboard-header__title {
+  @apply text-[28px] font-bold text-[#3B325B] font-['Archivo'] mb-3.5;
+}
+
+.dashboard-header__subtitle {
+  @apply text-lg font-medium text-[#3B325B] font-['Archivo'];
+}
+
+.user-name {
+  @apply text-[#3B325B];
+}
+
+.days-remaining {
+  @apply text-[#E61C5D] font-bold;
+}
+
+/* Eliminamos cualquier margen o padding de dashboard-content__main */
+.dashboard-content__main {
+  @apply m-0 p-0;
+}
+
+.highlight {
+  @apply text-[#E61C5D] font-medium;
+}
+
+/* Estilos para el error y loading */
+.error-container, .loading {
+  @apply min-h-screen bg-[#F5F2FF] flex flex-col items-center justify-center p-8;
+}
+
+.error-container h2, .loading {
+  @apply text-2xl font-bold text-[#3B325B] font-['Archivo'] mb-4;
+}
+
+.error-container p {
+  @apply text-lg text-[#3B325B] font-['Archivo'] mb-6;
+}
+
+.error-container button {
+  @apply inline-flex h-9 items-center justify-center rounded-full bg-[#2E2E2E] px-4 py-2 text-sm font-medium text-white hover:bg-[#4A4A4A] transition-colors font-['Archivo'];
+}

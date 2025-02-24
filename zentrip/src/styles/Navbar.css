@@ -2,130 +2,245 @@
 @tailwind components;
 @tailwind utilities;
 
-.floating-nav-container {
-  @apply fixed top-4 inset-x-0 max-w-5xl mx-auto z-50;
-  padding: 0 1rem;
+/* Contenedor principal */
+.navbar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: rgba(245, 242, 255, 0.95); /* Fondo lila claro semi-transparente, integrándose con el hero */
+  backdrop-filter: blur(8px); /* Efecto blur sutil para minimalismo */
 }
 
-.floating-nav-content {
-  @apply bg-white/80 dark:bg-black/60 backdrop-blur-md rounded-full border border-neutral-200 dark:border-white/[0.2] shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] px-6 py-2;
+/* Contenedor principal centrado */
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem; /* px-8 para más margen minimalista */
+  padding-right: 2rem; /* px-8 para más margen minimalista */
+  max-width: 80rem; /* max-w-7xl */
 }
 
-.floating-nav-inner {
-  @apply flex items-center justify-between gap-2 relative;
+/* Desktop Navbar */
+nav.hidden.lg\:flex {
+  display: none;
 }
 
-.logo-container {
-  @apply flex items-center flex-shrink-0;
-
-  /* Agregamos un margen entre los logos */
-  gap: 14px;
-}
-
-.logo-icon {
-  @apply h-8 w-8; /* 32px x 32px */
-}
-
-.logo {
-  @apply h-10 w-auto;
-}
-
-/* Desktop Navigation */
-.nav-links-desktop {
-  @apply flex items-center gap-4 flex-nowrap;
-}
-
-.nav-link {
-  @apply text-neutral-600 hover:text-pink-600 transition-colors text-sm whitespace-nowrap;
-}
-
-/* Auth Buttons Desktop */
-.auth-buttons-desktop {
-  @apply flex items-center gap-3 flex-shrink-0;
-}
-
-/* Shared button styles */
-.login-link,
-.register-button {
-  @apply px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all duration-200;
-  width: 110px;
-  text-align: center;
-}
-
-.login-link {
-  @apply border border-pink-600 text-pink-600 hover:bg-pink-600 hover:text-white;
-}
-
-.register-button {
-  @apply bg-dark text-white hover:bg-gray-700 border border-dark;
-}
-
-/* Hamburger Menu Button - Hidden by default */
-.hamburger-button {
-  @apply hidden p-2 text-neutral-600 hover:text-pink-600 transition-colors;
-}
-
-/* Mobile Menu */
-.mobile-menu {
-  @apply absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg py-4 px-4;
-}
-
-/* Media Queries */
-@media (max-width: 1080px) {
-  .floating-nav-container {
-    padding: 0 1.5rem;
-    max-width: 100%;
-  }
-  
-  .floating-nav-content {
-    @apply px-4;
+@media (min-width: 1024px) { /* lg breakpoint */
+  nav.hidden.lg\:flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 }
 
-@media (max-width: 768px) {
-  .floating-nav-container {
-    padding: 0 1rem;
-    max-width: 100%;
-  }
+nav .flex.items-center.gap-12 {
+  display: flex;
+  align-items: center;
+  gap: 3rem; /* gap-12, mucho espacio para minimalismo */
+}
 
-  /* Hide desktop navigation and auth buttons */
-  .nav-links-desktop,
-  .auth-buttons-desktop {
-    @apply hidden;
-  }
+nav .flex.items-center a.flex.items-center.gap-2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* gap-2 */
+}
 
-  /* Show hamburger button */
-  .hamburger-button {
-    @apply flex md:hidden;
-  }
+nav .flex.items-center img.w-20 {
+  width: 5rem; /* w-20 */
+  height: 5rem; /* h-20 */
+}
 
-  /* Mobile menu styling */
-  .mobile-menu {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    left: 0;
-    width: auto;
-    margin: 0 1rem;
-    @apply bg-white/95 backdrop-blur-md border border-neutral-200 rounded-2xl shadow-lg py-4 px-4;
-  }
+/* Links de navegación desktop */
+nav .flex.items-center .flex.space-x-6 a {
+  display: inline-flex;
+  height: 2.5rem; /* h-10 */
+  width: max-content; /* w-max */
+  align-items: center;
+  justify-content: center;
+  padding-left: 1rem; /* px-4 */
+  padding-right: 1rem; /* px-4 */
+  padding-top: 0.5rem; /* py-2 */
+  padding-bottom: 0.5rem; /* py-2 */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: #3B325B; /* text-[#3B325B], violeta oscuro como especificaste */
+  transition-property: color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms; /* transición suave */
+  border-radius: 0; /* Sin borde redondeado para minimalismo */
+}
 
-  .mobile-nav-links {
-    @apply flex flex-col space-y-3 mb-4 border-b border-neutral-200 pb-4;
-  }
+nav .flex.items-center .flex.space-x-6 a:hover {
+  color: #3B325B; /* hover:text-[#3B325B]/80, violeta más claro */
+  background-color: transparent; /* Sin fondo para minimalismo */
+}
 
-  .mobile-nav-link {
-    @apply text-neutral-600 hover:text-pink-600 transition-colors text-sm py-2;
-  }
+/* Botones de autenticación desktop */
+nav .flex.gap-4 a {
+  display: inline-flex;
+  height: 2.25rem; /* h-9 */
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px; /* rounded-full, para botones circulares como en la imagen */
+  padding-left: 1rem; /* px-4 para más espacio interno */
+  padding-right: 1rem; /* px-4 para más espacio interno */
+  padding-top: 0.5rem; /* py-2 */
+  padding-bottom: 0.5rem; /* py-2 */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms; /* transición suave */
+}
 
-  .mobile-auth-buttons {
-    @apply flex flex-col space-y-3 w-full pt-4;
-  }
+nav .flex.gap-4 a:first-child {
+  border-width: 1px; /* border */
+  border-color: transparent; /* Sin borde inicial para minimalismo */
+  background-color: transparent; /* Sin fondo para minimalismo */
+  color: #2E2E2E; /* text-[#2E2E2E], gris oscuro como especificaste */
+}
 
-  /* Mobile button styles */
-  .login-link,
-  .register-button {
-    @apply w-full;
-    width: 100%;
-  }
+nav .flex.gap-4 a:first-child:hover {
+  border-color: transparent; /* Sin borde al hover para minimalismo */
+  background-color: #4A4A4A; /* hover:bg-[#4A4A4A], gris más brillante */
+  color: #ffffff; /* hover:text-white */
+}
+
+nav .flex.gap-4 a:last-child {
+  border-width: 1px; /* border */
+  border-color: transparent; /* Sin borde inicial para minimalismo */
+  background-color: #2E2E2E; /* bg-[#2E2E2E], gris oscuro como especificaste */
+  color: #ffffff; /* text-white */
+}
+
+nav .flex.gap-4 a:last-child:hover {
+  background-color: #4A4A4A; /* hover:bg-[#4A4A4A], gris más brillante */
+  color: #ffffff; /* hover:text-white */
+}
+
+/* Menú Móvil */
+.block.lg\:hidden .flex.items-center.justify-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.block.lg\:hidden .flex.items-center.justify-between a.flex.items-center.gap-2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* gap-2 */
+}
+
+.block.lg\:hidden .flex.items-center.justify-between button {
+  padding: 0.5rem; /* p-2 */
+  border-width: 1px; /* border */
+  border-color: transparent; /* Sin borde para minimalismo */
+  background-color: transparent; /* Sin fondo para minimalismo */
+  border-radius: 0; /* Sin borde redondeado para minimalismo */
+  transition-property: color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms; /* transición suave */
+}
+
+.block.lg\:hidden .flex.items-center.justify-between button:hover {
+  border-color: #D1D5DB; /* hover:border-gray-300 */
+  color: #3B325B; /* hover:text-[#3B325B] */
+}
+
+.block.lg\:hidden .flex.items-center.justify-between button svg {
+  width: 1.5rem; /* w-6 */
+  height: 1.5rem; /* h-6 */
+  color: #3B325B; /* text-[#3B325B], violeta oscuro como especificaste */
+}
+
+/* Menú Móvil (panel lateral) */
+.fixed.inset-y-0.right-0.w-\[300px\] {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 300px;
+  background-color: #ffffff; /* bg-white */
+  border-left-width: 1px; /* border-l */
+  border-color: #E5E7EB; /* border-gray-100, gris muy claro para minimalismo */
+  box-shadow: none; /* Sin sombra para minimalismo */
+  padding: 1.5rem; /* p-6 */
+}
+
+.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-6 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* gap-6 */
+  margin-top: 1.5rem; /* mt-6 */
+}
+
+.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-4 a {
+  font-weight: 500; /* font-medium, menos pesado para minimalismo */
+  font-size: 0.875rem; /* text-sm */
+  padding-top: 0.5rem; /* py-2 */
+  padding-bottom: 0.5rem; /* py-2 */
+  color: #3B325B; /* text-[#3B325B], violeta oscuro como especificaste */
+}
+
+.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-4 a:hover {
+  color: #3B325B; /* hover:text-[#3B325B]/80, violeta más claro */
+}
+
+.fixed.inset-y-0.right-0.w-\[300px\] .border-t.pt-4 {
+  border-top-width: 1px; /* border-t */
+  border-color: #E5E7EB; /* border-gray-100, gris muy claro para minimalismo */
+  padding-top: 1rem; /* pt-4 */
+}
+
+.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a {
+  display: inline-flex;
+  height: 2.25rem; /* h-9 */
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px; /* rounded-full, para botones circulares */
+  padding-left: 1rem; /* px-4 para más espacio interno */
+  padding-right: 1rem; /* px-4 para más espacio interno */
+  padding-top: 0.5rem; /* py-2 */
+  padding-bottom: 0.5rem; /* py-2 */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms; /* transición suave */
+}
+
+.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a:first-child {
+  border-width: 1px; /* border */
+  border-color: transparent; /* Sin borde inicial para minimalismo */
+  background-color: transparent; /* Sin fondo para minimalismo */
+  color: #2E2E2E; /* text-[#2E2E2E], gris oscuro como especificaste */
+}
+
+.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a:first-child:hover {
+  border-color: transparent; /* Sin borde al hover para minimalismo */
+  background-color: #4A4A4A; /* hover:bg-[#4A4A4A], gris más brillante */
+  color: #ffffff; /* hover:text-white */
+}
+
+.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a:last-child {
+  border-width: 1px; /* border */
+  border-color: transparent; /* Sin borde inicial para minimalismo */
+  background-color: #2E2E2E; /* bg-[#2E2E2E], gris oscuro como especificaste */
+  color: #ffffff; /* text-white */
+}
+
+.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a:last-child:hover {
+  background-color: #4A4A4A; /* hover:bg-[#4A4A4A], gris más brillante */
+  color: #ffffff; /* hover:text-white */
+}
+
+/* Clases personalizadas para consistencia */
+.bg-muted {
+  background-color: #F5F2FF; /* bg-gray-100, lila claro para minimalismo */
+}
+
+.text-accent-foreground {
+  color: #3B325B; /* text-[#3B325B], violeta oscuro como especificaste */
 }

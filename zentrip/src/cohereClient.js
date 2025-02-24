@@ -40,8 +40,9 @@ const generateItinerary = async (message) => {
                  4. SIEMPRE responde en el mismo idioma que usa el usuario
                  5. Da respuestas detalladas y específicas para el destino que se está discutiendo
                  6. Si ocurre un error, intenta mantener el contexto de la conversación
-                 7. Para títulos importantes, usar el formato: ### Título
-                 8. Usar viñetas con - para listar items`,
+                 7. Para títulos principales, usar el formato: ### Título
+                 8. Para subtítulos usar el formato: ## Subtítulo
+                 9. Usar viñetas con - para listar items`,
       temperature: 0.7,
       maxTokens: 1000,
       k: 40,
@@ -49,19 +50,32 @@ const generateItinerary = async (message) => {
     });
 
     if (response && response.text) {
-      let finalResponse = response.text.replace(
-        /### (.*?)$/gm,
-        '<div class="message-title">$1</div>'
-      );
+      let finalResponse = response.text
+        // Títulos principales: se convierten en un div con clases Tailwind
+        .replace(
+          /### (.*?)$/gm,
+          '<div class="text-2xl font-semibold text-black mt-5 mb-4 border-l-4 pl-3 border-pink-600">$1</div>'
+        )
+        // Subtítulos
+        .replace(
+          /## (.*?)$/gm,
+          '<div class="text-xl font-medium text-black mt-4 mb-2">$1</div>'
+        )
+        // Texto en negrita: mayor peso con Tailwind (font-extrabold)
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-extrabold text-black">$1</strong>')
+        // Viñetas: utilizando utilidades de Tailwind para listas
+        .replace(/^- (.*?)$/gm, '<div class="ml-5 list-disc">$1</div>')
+        // Saltos de línea en párrafos
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^\s*(.+)$/gm, '<p>$1</p>');
 
-      // Dar formato a las listas
-      finalResponse = finalResponse.replace(
-        /^\- (.*?)$/gm,
-        '<div class="message-list-item">$1</div>'
-      );
+      // Eliminar párrafos vacíos y duplicados
+      finalResponse = finalResponse
+        .replace(/<p>\s*<\/p>/g, '')
+        .replace(/<\/p><p>/g, '</p>\n<p>');
 
       if (!finalResponse.includes('Zen - Tu Asistente de Viajes')) {
-        finalResponse += '\n\n<div class="message-signature">Zen - Tu Asistente de Viajes</div>';
+        finalResponse += '\n<div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>';
       }
       
       return finalResponse;
@@ -77,17 +91,17 @@ const generateItinerary = async (message) => {
 
     const lastMessages = currentConversation.messages;
     if (lastMessages.length > 0) {
-      return `<div class="message-error">Disculpa, estoy teniendo algunas dificultades técnicas. 
+      return `<div class="text-red-500 italic">Disculpa, estoy teniendo algunas dificultades técnicas. 
               Veo que estábamos conversando sobre tu viaje. 
               ¿Podrías reformular tu pregunta?</div>
               
-              <div class="message-signature">Zen - Tu Asistente de Viajes</div>`;
+              <div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>`;
     }
 
-    return `<div class="message-error">Lo siento, estoy experimentando dificultades técnicas en este momento. 
+    return `<div class="text-red-500 italic">Lo siento, estoy experimentando dificultades técnicas en este momento. 
             Por favor, intenta tu pregunta nuevamente en unos instantes.</div>
             
-            <div class="message-signature">Zen - Tu Asistente de Viajes</div>`;
+            <div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>`;
   }
 };
 

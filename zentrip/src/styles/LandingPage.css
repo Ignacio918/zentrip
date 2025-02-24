@@ -11,23 +11,33 @@
 }
 
 .hero-title {
-  @apply w-[752px] text-center text-[#2e2e2e] text-7xl font-bold font-archivo leading-[78px] mb-8;
+  @apply w-[752px] text-center text-[#3B325B] text-7xl font-bold font-archivo leading-[78px] mb-8;
 }
 
 .serif-highlight {
-  @apply text-[#e61c5d] font-bold italic font-['dm-serif'];
+  @apply text-[#E61C5D] font-bold italic font-['dm-serif'];
 }
 
-
+.chat-container {
+  @apply max-w-[720px] w-full;
+}
 
 @media (max-width: 768px) {
   .hero-title {
     @apply w-full text-5xl leading-[52px];
+  }
+
+  .chat-container {
+    @apply w-full px-4;
   }
 }
 
 @media (max-width: 480px) {
   .hero-title {
     @apply text-4xl leading-[40px];
+  }
+
+  .chat-container {
+    @apply w-full px-2;
   }
 }
