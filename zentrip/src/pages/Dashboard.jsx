@@ -3,7 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import DashboardNavbar from "../components/DashboardNavbar";
 import { motion } from "framer-motion";
-import { Menu } from "lucide-react"; // Añadir esta importación
+import { Menu } from "lucide-react"; // Ya corregido en mensajes anteriores
 import "../styles/Dashboard.css";
 import { supabase } from "../supabaseClient";
 
@@ -29,8 +29,7 @@ const Dashboard = () => {
           .from("users")
           .select("name, trip_date")
           .eq("id", userId)
-          .single()
-          .headers({ "Accept": "application/json" }); // Añadir encabezado para evitar 406
+          .single(); // Eliminamos .headers()
 
         if (userError) {
           if (userError.status === 406) {
@@ -90,7 +89,7 @@ const Dashboard = () => {
             onClick={toggleSidebar}
             className="toggle-button"
           >
-            <Menu className="w-6 h-6" /> {/* Usamos clases de Dashboard.css para estilos */}
+            <Menu className="w-6 h-6" />
           </button>
           <div className="logo-container-mobile">
             <img src={logoSmall} className="w-8 h-8" alt="zentrip logo" />

@@ -143,7 +143,9 @@ const RegisterPage = () => {
             setError("Error al sincronizar datos del usuario");
           })
           .finally(() => {
-            if (authListener) authListener.unsubscribe();
+            if (authListener && authListener.data && authListener.data.subscription) {
+              authListener.data.subscription.unsubscribe(); // Usar data.subscription.unsubscribe()
+            }
           });
       }
     });
@@ -157,7 +159,9 @@ const RegisterPage = () => {
     if (!popup) {
       setError("No se pudo abrir el popup para la autenticación de Google.");
       setIsLoading(false);
-      if (authListener) authListener.unsubscribe();
+      if (authListener && authListener.data && authListener.data.subscription) {
+        authListener.data.subscription.unsubscribe();
+      }
       return;
     }
 
@@ -165,14 +169,18 @@ const RegisterPage = () => {
       if (popup.closed && !popupClosed) {
         popupClosed = true;
         clearInterval(interval);
-        if (authListener) authListener.unsubscribe();
+        if (authListener && authListener.data && authListener.data.subscription) {
+          authListener.data.subscription.unsubscribe();
+        }
         setIsLoading(false);
       }
     }, 1000);
 
     return () => {
       clearInterval(interval);
-      if (authListener) authListener.unsubscribe();
+      if (authListener && authListener.data && authListener.data.subscription) {
+        authListener.data.subscription.unsubscribe();
+      }
     };
   };
 
