@@ -1,27 +1,37 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import Navbar from "./components/Navbar"; // Asegúrate de que este es el nombre de tu navbar
+import Footer from "./components/Footer"; // Asegúrate de que este es el nombre de tu footer
 import Landing from "./pages/Landing";
-import Login from "./pages/LoginPage";
-import Register from "./pages/RegisterPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 
-function App() {
+// Componente para condicionar Navbar y Footer
+const NavbarFooterWrapper = () => {
+  const location = useLocation();
+  const hideNavbarFooter = location.pathname === "/login" || location.pathname === "/register" || location.pathname.startsWith("/dashboard");
+
   return (
-    <div className="app-container">
-      <Navbar />
-      <div className="content-wrapper">
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </div>
-      <Footer />
-    </div>
+    <>
+      {!hideNavbarFooter && <Navbar />}
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard/*" element={<Dashboard />} />
+      </Routes>
+      {!hideNavbarFooter && <Footer />}
+    </>
   );
-}
+};
+
+const App = () => {
+  return (
+    <Router>
+      <NavbarFooterWrapper />
+    </Router>
+  );
+};
 
 export default App;

@@ -129,4 +129,77 @@
   .toggle-button:hover {
     @apply bg-[#F3F4F6];
   }
+
+  /* Estilos para la sección de viaje */
+  .trip-section {
+    @apply mt-8 px-6;
+  }
+
+  .trip-section h2 {
+    @apply text-2xl font-bold mb-6 text-[#E61C5D] font-['Archivo'];
+  }
+
+  .days-filter {
+    @apply mb-6;
+  }
+
+  .days-filter button {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 min-w-[80px];
+  }
+
+  .days-filter button:hover {
+    @apply bg-gray-200;
+  }
+
+  .days-filter button.bg-\[\#E61C5D\] {
+    @apply text-white;
+  }
+
+  .days-filter button.bg-gray-100 {
+    @apply text-gray-600;
+  }
+
+  /* Estilos para el grid de mapa y lista */
+  .grid {
+    @apply grid grid-cols-1 lg:grid-cols-4 gap-8;
+  }
+
+  .lg\:col-span-3 {
+    @apply lg:col-span-3;
+  }
+
+  /* Estilos para la lista de ubicaciones */
+  .locations-list {
+    @apply sticky top-4;
+  }
+
+  .locations-list .bg-white {
+    @apply rounded-xl p-4 shadow-lg border border-gray-200;
+  }
+
+  .locations-list h3 {
+    @apply text-lg font-semibold mb-4;
+  }
+
+  .location-item {
+    @apply mb-4 last:mb-0;
+  }
+
+  .location-item h4 {
+    @apply font-medium text-gray-800;
+  }
+
+  .location-item p {
+    @apply text-sm mt-1;
+  }
+
+  .location-item .font-medium {
+    @apply font-medium;
+  }
+
+  .location-item .text-gray-600,
+  .location-item .text-gray-500,
+  .location-item .text-gray-800 {
+    @apply font-['Archivo'];
+  }
 }
