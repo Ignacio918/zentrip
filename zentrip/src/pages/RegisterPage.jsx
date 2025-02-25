@@ -8,7 +8,7 @@ import Logo from "../assets/logo_medium.svg";
 import TextField from "../components/TextField";
 import "../styles/RegisterPage.css";
 
-const RegisterPage = ({ onAuthSuccess }) => {
+const RegisterPage = () => {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -102,9 +102,6 @@ const RegisterPage = ({ onAuthSuccess }) => {
 
         if (userError) throw userError;
 
-        if (onAuthSuccess) {
-          onAuthSuccess(); // Llamar a onAuthSuccess para manejar la autenticación en el componente padre
-        }
         navigate("/dashboard"); // Redirigir al dashboard
       }
     } catch (error) {
@@ -119,12 +116,32 @@ const RegisterPage = ({ onAuthSuccess }) => {
     setError("");
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: window.location.origin + "/dashboard" },
+        options: { redirectTo: "https://zentrip.vercel.app/dashboard" },
       });
 
-      if (error) setError(error.message);
+      if (error) {
+        setError(error.message);
+      } else {
+        // Obtener la sesión después de la autenticación con Google
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        const userId = sessionData.session.user.id;
+        const userEmail = sessionData.session.user.email;
+        const userName = sessionData.session.user.user_metadata?.full_name || userEmail.split("@")[0]; // Usar full_name de Google o email como nombre por defecto
+
+        // Insertar o actualizar el usuario en la tabla 'users'
+        const { error: userError } = await supabase
+          .from("users")
+          .upsert([{ id: userId, name: userName, email: userEmail }], { onConflict: "id" });
+
+        if (userError) throw userError;
+
+        navigate("/dashboard"); // Redirigir al dashboard
+      }
     } catch (error) {
       setError("Ocurrió un error al intentar registrarse con Google");
     } finally {
