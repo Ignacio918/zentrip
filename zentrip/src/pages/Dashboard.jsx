@@ -22,10 +22,6 @@ const Dashboard = () => {
         if (!sessionData.session) throw new Error("No hay sesión activa");
 
         const userId = sessionData.session.user.id;
-        const userEmail = sessionData.session.user.email;
-
-        console.log("User ID from session:", userId); // Depuración: loguea el userId
-        console.log("User Email from session:", userEmail); // Depuración: loguea el email
 
         const { data: userData, error: userError } = await supabase
           .from("users")
