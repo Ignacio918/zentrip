@@ -1,13 +1,12 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar"; // Asegúrate de que este es el nombre de tu navbar
-import Footer from "./components/Footer"; // Asegúrate de que este es el nombre de tu footer
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import Landing from "./pages/Landing";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 
-// Componente para condicionar Navbar y Footer
 const NavbarFooterWrapper = () => {
   const location = useLocation();
   const hideNavbarFooter = location.pathname === "/login" || location.pathname === "/register" || location.pathname.startsWith("/dashboard");

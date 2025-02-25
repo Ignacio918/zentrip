@@ -159,13 +159,21 @@
     @apply text-gray-600;
   }
 
-  /* Estilos para el grid de mapa y lista */
+  /* Estilos para el grid de mapa y lista (sin @apply grid) */
   .grid {
-    @apply grid grid-cols-1 lg:grid-cols-4 gap-8;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
 
   .lg\:col-span-3 {
-    @apply lg:col-span-3;
+    @media (min-width: 1024px) {
+      grid-column: span 3 / span 3;
+    }
   }
 
   /* Estilos para la lista de ubicaciones */
