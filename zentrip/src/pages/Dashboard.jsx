@@ -4,7 +4,7 @@ import Sidebar from "../components/Sidebar";
 import DashboardNavbar from "../components/DashboardNavbar";
 import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
-import logoSmall from "../assets/logo_small.png"; // Ajusta la ruta según tu archivo real (puede ser logo_small.svg o logo_medium.svg)
+import logoSmall from "../assets/logo_small.svg"; // Ajusta la ruta según tu archivo real (puede ser logo_small.svg o logo_medium.svg)
 import TripMap, { Location } from "../components/TripMap";
 import "../styles/Dashboard.css";
 import { supabase } from "../supabaseClient";
