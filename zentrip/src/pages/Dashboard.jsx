@@ -3,7 +3,8 @@ import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import DashboardNavbar from "../components/DashboardNavbar";
 import { motion } from "framer-motion";
-import { Menu } from "lucide-react"; // Ya corregido en mensajes anteriores
+import { Menu } from "lucide-react";
+import logoSmall from "../assets/logo_small.svg"; // Ajusta la ruta según tu proyecto (por ejemplo, logo_small.svg o logo_medium.svg)
 import "../styles/Dashboard.css";
 import { supabase } from "../supabaseClient";
 
@@ -29,7 +30,7 @@ const Dashboard = () => {
           .from("users")
           .select("name, trip_date")
           .eq("id", userId)
-          .single(); // Eliminamos .headers()
+          .single();
 
         if (userError) {
           if (userError.status === 406) {
