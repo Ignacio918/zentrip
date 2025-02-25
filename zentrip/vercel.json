@@ -6,8 +6,8 @@
         "use": "@vercel/static"
       },
       {
-        "src": "**/*.jsx",
-        "use": "@vercel/vite"
+        "src": "package.json",
+        "use": "@vercel/static-build"
       }
     ],
     "routes": [
