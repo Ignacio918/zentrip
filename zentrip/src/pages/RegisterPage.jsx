@@ -26,40 +26,31 @@ const RegisterPage = () => {
   });
 
   const validateFullName = (name) => {
-    if (!name.trim())
-      return { isValid: false, message: "El nombre es requerido" };
-    if (name.length < 3)
-      return {
-        isValid: false,
-        message: "El nombre debe tener al menos 3 caracteres",
-      };
+    if (!name.trim()) return { isValid: false, message: "El nombre es requerido" };
+    if (name.length < 3) return { isValid: false, message: "El nombre debe tener al menos 3 caracteres" };
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name)) return { isValid: false, message: "El nombre solo puede contener letras" };
     return { isValid: true, message: "Nombre válido" };
   };
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) return { isValid: false, message: "El email es requerido" };
-    if (!emailRegex.test(email))
-      return { isValid: false, message: "Email inválido" };
+    if (!emailRegex.test(email)) return { isValid: false, message: "Email inválido" };
     return { isValid: true, message: "Email válido" };
   };
 
   const validatePassword = (pass) => {
     if (!pass) return { isValid: false, message: "La contraseña es requerida" };
-    if (pass.length < 8)
-      return { isValid: false, message: "Mínimo 8 caracteres" };
-    if (!/[A-Z]/.test(pass))
-      return { isValid: false, message: "Debe incluir al menos una mayúscula" };
-    if (!/[0-9]/.test(pass))
-      return { isValid: false, message: "Debe incluir al menos un número" };
+    if (pass.length < 8) return { isValid: false, message: "Mínimo 8 caracteres" };
+    if (!/[A-Z]/.test(pass)) return { isValid: false, message: "Debe incluir al menos una mayúscula" };
+    if (!/[0-9]/.test(pass)) return { isValid: false, message: "Debe incluir al menos un número" };
+    if (!/[!@#$%^&*]/.test(pass)) return { isValid: false, message: "Debe incluir al menos un carácter especial (!@#$%^&*)" };
     return { isValid: true, message: "Contraseña válida" };
   };
 
   const validateConfirmPassword = (confirm) => {
-    if (!confirm)
-      return { isValid: false, message: "Debe confirmar la contraseña" };
-    if (confirm !== password)
-      return { isValid: false, message: "Las contraseñas no coinciden" };
+    if (!confirm) return { isValid: false, message: "Debe confirmar la contraseña" };
+    if (confirm !== password) return { isValid: false, message: "Las contraseñas no coinciden" };
     return { isValid: true, message: "Las contraseñas coinciden" };
   };
 
@@ -72,81 +63,117 @@ const RegisterPage = () => {
     });
   }, [fullName, email, password, confirmPassword]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    if (!Object.values(formValidation).every((v) => v.isValid)) {
+    const allValidations = {
+      fullName: validateFullName(fullName),
+      email: validateEmail(email),
+      password: validatePassword(password),
+      confirmPassword: validateConfirmPassword(confirmPassword),
+    };
+
+    setFormValidation(allValidations);
+
+    if (!Object.values(allValidations).every((v) => v.isValid)) {
       setError("Por favor, corrige los errores en el formulario");
       setIsLoading(false);
       return;
     }
 
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
+    supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
         },
+      },
+    })
+      .then(({ error }) => {
+        if (error) {
+          setError(error.message);
+        } else {
+          navigate("/dashboard");
+        }
+      })
+      .catch((error) => {
+        setError("Ocurrió un error al intentar registrarse");
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        // Insertar datos del usuario en la tabla 'users' si no existe
-        const { error: userError } = await supabase
-          .from("users")
-          .upsert([{ id: data.user.id, name: fullName, email }], { onConflict: "id" });
-
-        if (userError) throw userError;
-
-        navigate("/dashboard"); // Redirigir al dashboard
-      }
-    } catch (error) {
-      setError("Ocurrió un error al intentar registrarse");
-    } finally {
-      setIsLoading(false);
-    }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setIsLoading(true);
     setError("");
 
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: "https://zentrip.vercel.app/dashboard" },
-      });
+    const width = 500;
+    const height = 600;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
 
-      if (error) {
-        setError(error.message);
-      } else {
-        // Obtener la sesión después de la autenticación con Google
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    let authListener = null;
+    let popupClosed = false;
 
-        if (sessionError) throw sessionError;
+    authListener = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        const userId = session.user.id;
+        const userEmail = session.user.email;
+        const userName = session.user.user_metadata?.full_name || userEmail.split("@")[0];
 
-        const userId = sessionData.session.user.id;
-        const userEmail = sessionData.session.user.email;
-        const userName = sessionData.session.user.user_metadata?.full_name || userEmail.split("@")[0]; // Usar full_name de Google o email como nombre por defecto
+        console.log("Datos del usuario desde Google OAuth:", { userId, userEmail, userName });
 
-        // Insertar o actualizar el usuario en la tabla 'users'
-        const { error: userError } = await supabase
+        supabase
           .from("users")
-          .upsert([{ id: userId, name: userName, email: userEmail }], { onConflict: "id" });
-
-        if (userError) throw userError;
-
-        navigate("/dashboard"); // Redirigir al dashboard
+          .upsert([{ id: userId, name: userName, email: userEmail }], { onConflict: "id" })
+          .then(({ error: userError }) => {
+            if (userError) {
+              console.error("Error al insertar/actualizar usuario en users:", userError.message);
+              setError(userError.message);
+            } else {
+              navigate("/dashboard");
+            }
+          })
+          .catch((error) => {
+            console.error("Error en upsert:", error.message);
+            setError("Error al sincronizar datos del usuario");
+          })
+          .finally(() => {
+            if (authListener) authListener.unsubscribe();
+          });
       }
-    } catch (error) {
-      setError("Ocurrió un error al intentar registrarse con Google");
-    } finally {
+    });
+
+    const popup = window.open(
+      `https://szloqueilztpbdurfowm.supabase.co/auth/v1/authorize?provider=google&redirect_to=https://zentrip.vercel.app/dashboard`,
+      "GoogleSignIn",
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+
+    if (!popup) {
+      setError("No se pudo abrir el popup para la autenticación de Google.");
       setIsLoading(false);
+      if (authListener) authListener.unsubscribe();
+      return;
     }
+
+    const interval = setInterval(() => {
+      if (popup.closed && !popupClosed) {
+        popupClosed = true;
+        clearInterval(interval);
+        if (authListener) authListener.unsubscribe();
+        setIsLoading(false);
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      if (authListener) authListener.unsubscribe();
+    };
   };
 
   return (
@@ -161,64 +188,122 @@ const RegisterPage = () => {
         </p>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <TextField
-            label="Nombre completo"
-            placeholder="Ingresa tu nombre completo"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            state={formValidation.fullName.isValid ? "success" : "error"}
-          />
+          <div className="auth-inputs-container">
+            <div className="label-input-container">
+              <TextField
+                label="Nombre completo"
+                placeholder="Ingresa tu nombre completo"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                state={
+                  formValidation.fullName.isValid
+                    ? "success"
+                    : fullName
+                    ? "error"
+                    : "enabled"
+                }
+                type="text"
+                disabled={isLoading}
+                autocomplete="name"
+                helperText={fullName ? formValidation.fullName.message : ""}
+              />
+            </div>
 
-          <TextField
-            label="Email"
-            placeholder="tu@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            state={formValidation.email.isValid ? "success" : "error"}
-          />
+            <div className="label-input-container">
+              <TextField
+                label="Email"
+                placeholder="tu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                state={
+                  formValidation.email.isValid
+                    ? "success"
+                    : email
+                    ? "error"
+                    : "enabled"
+                }
+                type="email"
+                disabled={isLoading}
+                autocomplete="email"
+                helperText={email ? formValidation.email.message : ""}
+              />
+            </div>
 
-          <TextField
-            label="Contraseña"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            type={showPassword ? "text" : "password"}
-            state={formValidation.password.isValid ? "success" : "error"}
-            icon={
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <img
-                  src={showPassword ? EyeOffIcon : EyeIcon}
-                  alt="Toggle password"
-                />
-              </button>
-            }
-          />
+            <div className="label-input-container">
+              <TextField
+                label="Contraseña"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                state={
+                  formValidation.password.isValid
+                    ? "success"
+                    : password
+                    ? "error"
+                    : "enabled"
+                }
+                type={showPassword ? "text" : "password"}
+                disabled={isLoading}
+                helperText={password ? formValidation.password.message : ""}
+                icon={
+                  <button
+                    type="button"
+                    className="toggle-password"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
+                  >
+                    <img
+                      src={showPassword ? EyeOffIcon : EyeIcon}
+                      alt="Toggle password"
+                    />
+                  </button>
+                }
+                autocomplete="new-password"
+              />
+            </div>
 
-          <TextField
-            label="Confirmar contraseña"
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            type={showConfirmPassword ? "text" : "password"}
-            state={formValidation.confirmPassword.isValid ? "success" : "error"}
-            icon={
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                <img
-                  src={showConfirmPassword ? EyeOffIcon : EyeIcon}
-                  alt="Toggle confirm password"
-                />
-              </button>
-            }
-          />
+            <div className="label-input-container">
+              <TextField
+                label="Confirmar contraseña"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                state={
+                  formValidation.confirmPassword.isValid
+                    ? "success"
+                    : confirmPassword
+                    ? "error"
+                    : "enabled"
+                }
+                type={showConfirmPassword ? "text" : "password"}
+                disabled={isLoading}
+                helperText={confirmPassword ? formValidation.confirmPassword.message : ""}
+                icon={
+                  <button
+                    type="button"
+                    className="toggle-password"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={isLoading}
+                  >
+                    <img
+                      src={showConfirmPassword ? EyeOffIcon : EyeIcon}
+                      alt="Toggle password"
+                    />
+                  </button>
+                }
+                autocomplete="new-password"
+              />
+            </div>
+          </div>
 
           <button type="submit" className="auth-button" disabled={isLoading}>
-            {isLoading ? "Registrando..." : "Regístrate"}
+            {isLoading ? (
+              <>
+                <span className="spinner"></span> Registrando...
+              </>
+            ) : (
+              "Regístrate"
+            )}
           </button>
 
           <div className="auth-divider" />
@@ -229,17 +314,29 @@ const RegisterPage = () => {
             className="auth-google-button"
             disabled={isLoading}
           >
-            <img src={GoogleIcon} alt="Google" className="google-icon" />{" "}
-            Registrarse con Google
+            {isLoading ? (
+              <>
+                <span className="spinner"></span> Conectando...
+              </>
+            ) : (
+              <>
+                <img src={GoogleIcon} alt="Google" className="google-icon" />
+                Registrarse con Google
+              </>
+            )}
           </button>
-        </form>
 
-        <div className="auth-login-link">
-          <span className="auth-text">¿Ya tienes cuenta?</span>
-          <span className="auth-link" onClick={() => navigate("/login")}>
-            Inicia sesión
-          </span>
-        </div>
+          <div className="auth-login-link">
+            <span className="auth-text">¿Ya tienes una cuenta?</span>
+            <span
+              className="auth-link"
+              onClick={() => navigate("/login")}
+              role="button"
+            >
+              Inicia sesión
+            </span>
+          </div>
+        </form>
 
         {error && <p className="auth-error">{error}</p>}
       </div>

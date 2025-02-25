@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import DashboardNavbar from "../components/DashboardNavbar";
 import { motion } from "framer-motion";
+import { Menu } from "lucide-react"; // Añadir esta importación
 import "../styles/Dashboard.css";
 import { supabase } from "../supabaseClient";
 
@@ -22,14 +23,21 @@ const Dashboard = () => {
         if (!sessionData.session) throw new Error("No hay sesión activa");
 
         const userId = sessionData.session.user.id;
+        console.log("User ID from session:", userId); // Depuración temporal
 
         const { data: userData, error: userError } = await supabase
           .from("users")
           .select("name, trip_date")
           .eq("id", userId)
-          .single();
+          .single()
+          .headers({ "Accept": "application/json" }); // Añadir encabezado para evitar 406
 
-        if (userError) throw new Error(`Error al obtener datos del usuario: ${userError.message}`);
+        if (userError) {
+          if (userError.status === 406) {
+            console.error("Error 406: Not Acceptable - Verifica permisos o datos en users:", userError.message);
+          }
+          throw new Error(`Error al obtener datos del usuario: ${userError.message}`);
+        }
 
         setUser({
           name: userData.name,
@@ -45,35 +53,16 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="error-container min-h-screen bg-[#F5F2FF] flex flex-col items-center justify-center p-8"
-      >
-        <h2 className="text-2xl font-bold text-[#3B325B] mb-4 font-['Archivo']">Error en el Dashboard:</h2>
-        <p className="text-lg text-[#3B325B] mb-6 font-['Archivo']">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="inline-flex h-9 items-center justify-center rounded-full bg-[#2E2E2E] px-4 py-2 text-sm font-medium text-white hover:bg-[#4A4A4A] transition-colors font-['Archivo']"
-        >
-          Reintentar
-        </button>
-      </motion.div>
+      <div className="error-container">
+        <h2>Error en el Dashboard:</h2>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Reintentar</button>
+      </div>
     );
   }
 
   if (!user) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="loading min-h-screen bg-[#F5F2FF] flex items-center justify-center text-[#3B325B] text-lg font-['Archivo']"
-      >
-        Cargando...
-      </motion.div>
-    );
+    return <div className="loading">Cargando...</div>;
   }
 
   const toggleSidebar = () => {
@@ -101,7 +90,7 @@ const Dashboard = () => {
             onClick={toggleSidebar}
             className="toggle-button"
           >
-            <Menu className="w-6 h-6 text-[#3B325B]" />
+            <Menu className="w-6 h-6" /> {/* Usamos clases de Dashboard.css para estilos */}
           </button>
           <div className="logo-container-mobile">
             <img src={logoSmall} className="w-8 h-8" alt="zentrip logo" />
