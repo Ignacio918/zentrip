@@ -17,18 +17,21 @@ const NavbarFooterWrapper = () => {
   useEffect(() => {
     let timeoutId;
     const checkSession = async () => {
+      console.log('Iniciando checkSession...');
       try {
-        // Establecer un tiempo máximo de espera (10 segundos)
         timeoutId = setTimeout(() => {
           console.warn('Tiempo de espera agotado para getSession');
           setLoading(false);
-          setIsLoggedIn(false); // Fallback si no responde
+          setIsLoggedIn(false);
         }, 10000);
 
+        console.log('Llamando a supabase.auth.getSession...');
         const {
           data: { session },
           error: sessionError,
         } = await supabase.auth.getSession();
+        console.log('Respuesta de getSession:', { session, sessionError });
+
         if (sessionError) {
           console.error('Error al obtener sesión:', sessionError.message);
           setIsLoggedIn(false);
@@ -40,8 +43,9 @@ const NavbarFooterWrapper = () => {
         setError('Error al inicializar la sesión: ' + error.message);
         setIsLoggedIn(false);
       } finally {
-        clearTimeout(timeoutId); // Limpiar el timeout si se resuelve
+        clearTimeout(timeoutId);
         setLoading(false);
+        console.log('checkSession finalizado, loading=false');
       }
     };
 
@@ -49,10 +53,12 @@ const NavbarFooterWrapper = () => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Cambio de estado de autenticación:', event);
         try {
           setIsLoggedIn(!!session);
           if (event === 'SIGNED_IN' && session) {
             const { data: refreshedSession } = await supabase.auth.getSession();
+            console.log('Sesión refreshed:', refreshedSession);
             setIsLoggedIn(!!refreshedSession.session);
           }
         } catch (error) {
@@ -63,7 +69,7 @@ const NavbarFooterWrapper = () => {
     );
 
     return () => {
-      clearTimeout(timeoutId); // Limpiar timeout en caso de desmontaje
+      clearTimeout(timeoutId);
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -79,7 +85,7 @@ const NavbarFooterWrapper = () => {
         Loading...
         {error && <p style={{ color: 'red' }}>Error: {error}</p>}
       </div>
-    ); // Mostrar loading con posible error
+    );
   }
 
   return (
