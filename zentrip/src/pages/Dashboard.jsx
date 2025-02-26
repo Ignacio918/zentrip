@@ -324,53 +324,67 @@ const Dashboard = () => {
     const context = chatMessages
       .map((msg) => `${msg.sender}: ${msg.text}`)
       .join('\n');
-    const response = await generateItinerary(message, context);
-    let finalResponse = response;
+    try {
+      const response = await generateItinerary(message, context);
+      let finalResponse = response;
 
-    if (message.toLowerCase().includes('tours')) {
-      const destinationMatch = context.match(/([A-Za-z\s]+)(?=\s*[-,]|$)/i);
-      if (destinationMatch) {
-        const destination = destinationMatch[1].trim().toLowerCase();
-        const destinationTours = await fetchViatorTours(destination);
-        if (destinationTours.length > 0) {
-          finalResponse += `
-            <h4 class="text-sm font-semibold mt-2 text-[#3B325B]">Tours en ${destination.charAt(0).toUpperCase() + destination.slice(1)}:</h4>
-            <ul class="list-disc ml-5">${destinationTours
-              .slice(0, 3)
-              .map(
-                (t) =>
-                  `<li>${t.name} - $${t.price || 'N/A'} - ${t.description || 'Detalles no disponibles'}</li>`
-              )
-              .join('')}</ul>`;
+      if (message.toLowerCase().includes('tours')) {
+        const destinationMatch = context.match(/([A-Za-z\s]+)(?=\s*[-,]|$)/i);
+        if (destinationMatch) {
+          const destination = destinationMatch[1].trim().toLowerCase();
+          const destinationTours = await fetchViatorTours(destination);
+          if (destinationTours.length > 0) {
+            finalResponse += `
+              <h4 class="text-sm font-semibold mt-2 text-[#3B325B]">Tours en ${destination.charAt(0).toUpperCase() + destination.slice(1)}:</h4>
+              <ul class="list-disc ml-5">${destinationTours
+                .slice(0, 3)
+                .map(
+                  (t) =>
+                    `<li>${t.name} - $${t.price || 'N/A'} - ${t.description || 'Detalles no disponibles'}</li>`
+                )
+                .join('')}</ul>`;
+          } else
+            finalResponse += `<p class="text-sm text-gray-600">No hay tours disponibles para ${destination} en este momento.</p>`;
         } else
-          finalResponse += `<p class="text-sm text-gray-600">No hay tours disponibles para ${destination} en este momento.</p>`;
-      } else
-        finalResponse +=
-          '<p class="text-sm text-gray-600">Por favor, especifica un destino para los tours.</p>';
-    }
+          finalResponse +=
+            '<p class="text-sm text-gray-600">Por favor, especifica un destino para los tours.</p>';
+      }
 
-    if (
-      location.pathname === '/dashboard' &&
-      (finalResponse.includes('Tu viaje está tomando forma') ||
-        finalResponse.includes('Sigue en el dashboard'))
-    ) {
-      finalResponse = finalResponse
-        .replace(
-          /¡Tu viaje está tomando forma!.*Sigue en el dashboard para:.*/s,
-          ''
-        )
-        .trim();
-    }
+      if (
+        location.pathname === '/dashboard' &&
+        (finalResponse.includes('Tu viaje está tomando forma') ||
+          finalResponse.includes('Sigue en el dashboard'))
+      ) {
+        finalResponse = finalResponse
+          .replace(
+            /¡Tu viaje está tomando forma!.*Sigue en el dashboard para:.*/s,
+            ''
+          )
+          .trim();
+      }
 
-    const newMessages = [
-      ...chatMessages,
-      { text: message, sender: 'user' },
-      { text: finalResponse, sender: 'ai' },
-    ];
-    setChatMessages(newMessages);
-    localStorage.setItem('zentripConversation', JSON.stringify(newMessages));
-    parseChatToSuggestions(newMessages);
-    return finalResponse;
+      const newMessages = [
+        ...chatMessages,
+        { text: message, sender: 'user' },
+        { text: finalResponse, sender: 'ai' },
+      ];
+      setChatMessages(newMessages);
+      localStorage.setItem('zentripConversation', JSON.stringify(newMessages));
+      parseChatToSuggestions(newMessages);
+      return finalResponse;
+    } catch (error) {
+      console.error('Error en handleChatSubmit:', error);
+      const errorMessage = `Error técnico: ${error.message || 'Error desconocido'}`;
+      const newMessages = [
+        ...chatMessages,
+        { text: message, sender: 'user' },
+        { text: errorMessage, sender: 'ai' },
+      ];
+      setChatMessages(newMessages);
+      localStorage.setItem('zentripConversation', JSON.stringify(newMessages));
+      parseChatToSuggestions(newMessages);
+      return errorMessage;
+    }
   };
 
   const saveItinerary = async () => {
@@ -379,13 +393,15 @@ const Dashboard = () => {
         data: { user },
       } = await supabase.auth.getUser();
       const userId = user.id;
-      const { error } = await supabase.from('itineraries').insert([
-        {
-          user_id: userId,
-          locations: JSON.stringify(locations),
-          created_at: new Date(),
-        },
-      ]);
+      const { error } = await supabase
+        .from('itineraries')
+        .insert([
+          {
+            user_id: userId,
+            locations: JSON.stringify(locations),
+            created_at: new Date(),
+          },
+        ]);
       if (error) throw error;
       alert('Itinerario guardado en Zentrip');
     } catch (error) {
