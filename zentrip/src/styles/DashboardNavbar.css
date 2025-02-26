@@ -1,27 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .dashboard-navbar {
-    @apply h-[72px] px-11 py-6 bg-[#FDFDFD] border-b border-[#F3F4F6] flex justify-between items-center;
+  @apply h-[72px] px-11 py-6 bg-[#FDFDFD] border-b border-[#F3F4F6] flex justify-between items-center fixed top-0 right-0 left-0 z-40;
+  display: flex; /* Aseguramos que se muestre */
+}
+
+.dashboard-navbar__title {
+  @apply text-[#3B325B] text-xl font-['Archivo']; /* Cambiamos a #3B325B y Archivo para consistencia con Zentrip */
+  font-weight: 500;
+}
+
+.dashboard-navbar__actions {
+  @apply flex items-center gap-4;
+}
+
+.dashboard-navbar__notification-btn {
+  @apply w-7 h-7 p-[10px] bg-[#F3F4F6] rounded-full flex justify-center items-center;
+}
+
+.dashboard-navbar__notification-icon {
+  @apply w-6 h-6;
+}
+
+.dashboard-navbar__avatar {
+  @apply w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-[#3B325B] font-['Archivo']; /* Cambiamos a #3B325B y Archivo */
+  font-weight: 500;
+}
+
+@screen md {
+  .dashboard-navbar {
+    @apply left-64 w-[calc(100%-16rem)];
   }
-  
-  .dashboard-navbar__title {
-    @apply text-[#161616] text-xl font-medium font-['Urbanist'];
-  }
-  
-  .dashboard-navbar__actions {
-    @apply flex items-center gap-4;
-  }
-  
-  .dashboard-navbar__notification-btn {
-    @apply w-7 h-7 p-[10px] bg-[#F3F4F6] rounded-full flex justify-center items-center;
-  }
-  
-  .dashboard-navbar__avatar {
-    @apply w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium;
-  }
-  
-  @screen md {
-    .dashboard-navbar {
-      @apply ml-64;
-    }
-  }
-  
-  
+}

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Landing from "./pages/Landing";
@@ -26,11 +26,7 @@ const NavbarFooterWrapper = () => {
 };
 
 const App = () => {
-  return (
-    <Router>
-      <NavbarFooterWrapper />
-    </Router>
-  );
+  return <NavbarFooterWrapper />;
 };
 
 export default App;

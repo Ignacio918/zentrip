@@ -1,213 +1,433 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* src/styles/Dashboard.css */
+.dashboard {
+  @apply flex flex-col md:flex-row min-h-screen bg-gray-100;
+  /* Animación de entrada suave para el dashboard */
+  transition: all 0.3s ease-in-out;
+}
 
-@layer components {
-  .dashboard {
-    @apply flex flex-col md:flex-row min-h-screen bg-[#F5F2FF];
-  }
+.dashboard-content {
+  @apply flex-grow overflow-y-auto w-full pt-16 md:pt-[72px];
+  /* Animación de scroll suave */
+  scroll-behavior: smooth;
+}
 
+@media (min-width: 768px) {
   .dashboard-content {
-    @apply flex-grow overflow-y-auto w-full pt-16 md:pt-[72px];
+    @apply ml-64;
   }
+}
 
-  @media (min-width: 768px) {
-    .dashboard-content {
-      @apply ml-64;
-    }
-  }
+.dashboard-content h1 {
+  @apply text-2xl font-bold mb-4;
+  /* Animación de entrada para títulos */
+  animation: slideIn 0.5s ease-out;
+}
 
-  .dashboard-content h1 {
-    @apply text-2xl font-bold mb-4 text-[#3B325B] font-['Archivo'];
-  }
+.dashboard-content p {
+  @apply text-lg;
+  /* Animación de entrada para subtítulos */
+  animation: fadeIn 0.5s ease-out 0.2s;
+}
 
-  .dashboard-content p {
-    @apply text-lg text-[#3B325B] font-['Archivo'];
-  }
+/* Estilos para el navbar */
+.dashboard-navbar {
+  @apply h-[72px] px-11 bg-[#FDFDFD] border-b border-[#F3F4F6] justify-between items-center fixed top-0 right-0 left-0;
+  display: none;
+  /* Animación de entrada para el navbar */
+  animation: slideDown 0.5s ease-out;
+}
 
-  /* Estilos para el navbar */
+.dashboard-navbar__title {
+  @apply text-[#161616] text-xl font-medium font-['Urbanist'];
+}
+
+.dashboard-navbar__actions {
+  @apply flex items-center gap-4;
+  /* Animación de hover para acciones */
+  transition: transform 0.2s ease-in-out;
+}
+
+.dashboard-navbar__actions:hover {
+  @apply transform scale-105;
+}
+
+.dashboard-navbar__notification-btn {
+  @apply w-7 h-7 bg-[#F3F4F6] rounded-full flex justify-center items-center;
+  /* Animación de hover para notificaciones */
+  transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.dashboard-navbar__notification-btn:hover {
+  @apply bg-gray-200 transform scale-110;
+}
+
+.dashboard-navbar__notification-icon {
+  @apply w-6 h-6;
+}
+
+.dashboard-navbar__avatar {
+  @apply w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium;
+  /* Animación de hover para avatar */
+  transition: transform 0.2s ease-in-out;
+}
+
+.dashboard-navbar__avatar:hover {
+  @apply transform scale-110;
+}
+
+@media (min-width: 768px) {
   .dashboard-navbar {
-    @apply h-[72px] px-11 py-6 bg-[#FDFDFD] border-b border-[#F3F4F6] flex justify-between items-center fixed top-0 right-0 left-0;
+    @apply left-64 w-[calc(100%-16rem)];
+    display: flex;
+  }
+}
+
+/* Estilos para el encabezado móvil */
+.mobile-header {
+  @apply flex justify-between items-center bg-white p-4 h-16 w-full fixed top-0 left-0 right-0 z-50;
+  /* Animación de entrada para móvil */
+  animation: slideDown 0.5s ease-out;
+}
+
+@media (min-width: 768px) {
+  .mobile-header {
     display: none;
   }
+}
 
-  .dashboard-navbar__title {
-    @apply text-[#3B325B] text-xl font-medium font-['Archivo'];
+/* Estilos para el header del dashboard */
+.dashboard-header {
+  @apply mb-8 mt-8 ml-11;
+  /* Animación de entrada para el header */
+  animation: fadeIn 0.5s ease-out;
+}
+
+.dashboard-header__title {
+  @apply text-[28px] font-bold text-[#161616] font-['Urbanist'] mb-3.5;
+}
+
+.dashboard-header__subtitle {
+  @apply text-lg font-medium text-[#3E3E3E] font-['Urbanist'];
+}
+
+.user-name {
+  @apply text-[#161616];
+  /* Animación de entrada para nombres */
+  animation: fadeIn 0.5s ease-out 0.1s;
+}
+
+.days-remaining {
+  @apply text-[#E61C5D] font-bold;
+  /* Animación de entrada para días restantes */
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.highlight {
+  @apply text-[#E61C5D] font-medium;
+  /* Animación de entrada para highlights */
+  animation: fadeIn 0.5s ease-out 0.2s;
+}
+
+/* Estilos para el mensaje de error */
+.error-container {
+  @apply min-h-screen bg-[#F5F2FF] flex flex-col items-center justify-center p-8;
+  /* Animación de entrada para errores */
+  animation: fadeIn 0.5s ease-out;
+}
+
+.error-container h2 {
+  @apply text-2xl font-bold text-[#3B325B] mb-4 font-['Archivo'];
+}
+
+.error-container p {
+  @apply text-lg text-[#3B325B] mb-6 font-['Archivo'];
+}
+
+.error-container button {
+  @apply inline-flex h-9 items-center justify-center rounded-full bg-[#2E2E2E] px-4 py-2 text-sm font-['Archivo'] text-white hover:bg-[#4A4A4F] transition-colors;
+  /* Animación de hover para botones de error */
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.error-container button:hover {
+  @apply transform scale-105;
+}
+
+/* Estilos para el estado de carga */
+.loading {
+  @apply min-h-screen bg-[#F5F2FF] flex items-center justify-center text-[#3B325B] text-lg font-['Archivo'];
+  /* Animación de carga */
+  animation: spin 1s linear infinite;
+}
+
+/* Estilos para la sección de viaje */
+.trip-section {
+  @apply mt-8 px-6;
+  /* Animación de entrada para la sección */
+  animation: slideUp 0.5s ease-out;
+}
+
+.trip-section h2 {
+  @apply text-2xl font-bold mb-6 text-[#E61C5D] font-['Archivo'];
+  /* Animación de entrada para títulos de sección */
+  animation: fadeIn 0.5s ease-out;
+}
+
+.days-filter {
+  @apply mb-8;
+  /* Animación de entrada para filtros */
+  animation: fadeIn 0.5s ease-out 0.3s;
+}
+
+.days-filter button {
+  @apply px-4 py-2 rounded-full text-sm font-['Archivo'] transition-all duration-200 min-w-[80px];
+  font-weight: 500;
+  /* Animación de hover para botones de filtro */
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.days-filter button:hover {
+  @apply bg-gray-200 transform scale-105;
+}
+
+.days-filter button.bg-\[\#E61C5D\] {
+  @apply text-white;
+}
+
+.days-filter button.bg-gray-100 {
+  @apply text-[#3B325B];
+}
+
+/* Estilos para el grid de mapa y lista */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
   }
+  /* Animación de entrada para el grid */
+  animation: fadeIn 0.5s ease-out;
+}
 
-  .dashboard-navbar__actions {
-    @apply flex items-center gap-4;
+.lg\:col-span-3 {
+  @media (min-width: 1024px) {
+    grid-column: span 3 / span 3;
   }
+}
 
-  .dashboard-navbar__notification-btn {
-    @apply w-7 h-7 p-[10px] bg-[#F3F4F6] rounded-full flex justify-center items-center;
+/* Estilos para la lista de ubicaciones */
+.locations-list {
+  @apply sticky top-4;
+  /* Animación de entrada para la lista */
+  animation: slideIn 0.5s ease-out;
+}
+
+.locations-list .bg-white {
+  @apply rounded-xl p-4 shadow-lg border border-gray-200;
+  /* Animación de entrada para el contenedor de la lista */
+  animation: fadeIn 0.5s ease-out 0.4s;
+}
+
+.locations-list h3 {
+  @apply text-lg font-semibold mb-4 text-[#3B325B];
+  /* Animación de entrada para títulos de lista */
+  animation: fadeIn 0.5s ease-out;
+}
+
+.location-item {
+  @apply mb-4 last:mb-0 p-4 rounded-lg bg-white hover:bg-gray-50 border-l-4 border-[#E61C5D] shadow-sm transition-all duration-200 cursor-pointer;
+  /* Animación de entrada para items de ubicación */
+  animation: slideIn 0.5s ease-out forwards;
+  animation-delay: calc(var(--order) * 0.1s);
+}
+
+.location-item:hover {
+  @apply transform translate-x-1;
+}
+
+.location-item h4 {
+  @apply font-['Archivo'] text-[#3B325B];
+  font-weight: 500;
+}
+
+.location-item p {
+  @apply font-['Archivo'] text-sm mt-1;
+}
+
+.location-item .text-gray-600 {
+  @apply text-[#666666];
+  font-weight: 500;
+}
+
+.location-item .text-gray-500 {
+  @apply text-[#999999];
+}
+
+/* Estilos para el widget de clima fijo de Buenos Aires */
+.weather-widget {
+  @apply fixed top-[88px] right-4 bg-white rounded-xl p-4 shadow-lg border border-gray-200 z-10;
+  /* Animación de entrada para el widget de clima */
+  animation: fadeIn 0.5s ease-out 0.5s;
+}
+
+.weather-widget h3 {
+  @apply text-lg font-semibold mb-2 text-[#3B325B] font-['Archivo'];
+}
+
+.weather-widget p {
+  @apply text-sm font-['Archivo'] text-[#666666];
+  /* Animación de entrada para texto de clima */
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Estilos para el botón toggle en móviles */
+.toggle-button {
+  @apply w-8 h-8 flex items-center justify-center rounded-full;
+  /* Animación de hover para toggle */
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.toggle-button:hover {
+  @apply bg-[#F3F4F6] transform scale-105;
+}
+
+.toggle-button.open {
+  @apply bg-[#F3F4F6];
+}
+
+/* Animaciones personalizadas */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
   }
-
-  .dashboard-navbar__notification-icon {
-    @apply w-6 h-6;
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
+}
 
-  .dashboard-navbar__avatar {
-    @apply w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-[#3B325B] font-medium font-['Archivo'];
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
   }
-
-  @screen md {
-    .dashboard-navbar {
-      @apply left-64 w-[calc(100%-16rem)];
-      display: flex;
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  /* Estilos para el encabezado móvil */
-  .mobile-header {
-    @apply flex justify-between items-center bg-white p-4 h-16 w-full fixed top-0 left-0 right-0 z-50;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-
-  @media (min-width: 768px) {
-    .mobile-header {
-      display: none;
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  /* Estilos para el header del dashboard */
-  .dashboard-header {
-    @apply mb-8 mt-8 ml-11;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-
-  .dashboard-header__title {
-    @apply text-[28px] font-bold text-[#3B325B] font-['Archivo'] mb-3.5;
+  to {
+    opacity: 1;
   }
+}
 
-  .dashboard-header__subtitle {
-    @apply text-lg font-medium text-[#3B325B] font-['Archivo'];
+@keyframes pulse {
+  0% {
+    transform: scale(1);
   }
-
-  .user-name {
-    @apply text-[#3B325B];
+  50% {
+    transform: scale(1.05);
   }
-
-  .days-remaining {
-    @apply text-[#E61C5D] font-bold;
+  100% {
+    transform: scale(1);
   }
+}
 
-  /* Eliminamos cualquier margen o padding de dashboard-content__main */
-  .dashboard-content__main {
-    @apply m-0 p-0;
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
   }
-
-  .highlight {
-    @apply text-[#E61C5D] font-medium font-['Archivo'];
+  100% {
+    transform: rotate(360deg);
   }
+}
 
-  /* Estilos para el mensaje de error */
-  .error-container {
-    @apply min-h-screen bg-[#F5F2FF] flex flex-col items-center justify-center p-8;
-  }
+/* Badges de seguridad */
+.badge-security {
+  @apply absolute top-2 right-2 bg-[#E61C5D] text-white text-xs px-2 py-1 rounded-full font-['Archivo'];
+  /* Animación de entrada para badges */
+  animation: fadeIn 0.5s ease-out;
+}
 
-  .error-container h2 {
-    @apply text-2xl font-bold text-[#3B325B] mb-4 font-['Archivo'];
-  }
+/* Botones de acción (ej: Agregar, Guardar Itinerario) */
+.action-button {
+  @apply bg-[#E61C5D] text-white px-4 py-2 rounded-full transition-colors duration-300 hover:bg-[#C7174E] shadow-md;
+  /* Animación de hover y clic */
+  transition: transform 0.2s ease-in-out;
+}
 
-  .error-container p {
-    @apply text-lg text-[#3B325B] mb-6 font-['Archivo'];
-  }
+.action-button:hover {
+  @apply transform scale-105;
+}
 
-  .error-container button {
-    @apply inline-flex h-9 items-center justify-center rounded-full bg-[#2E2E2E] px-4 py-2 text-sm font-medium text-white hover:bg-[#4A4A4A] transition-colors font-['Archivo'];
-  }
+.action-button:active {
+  @apply transform scale-95;
+}
 
-  /* Estilos para el estado de carga */
-  .loading {
-    @apply min-h-screen bg-[#F5F2FF] flex items-center justify-center text-[#3B325B] text-lg font-['Archivo'];
-  }
+/* Estilos para sugerencias de Zen */
+.suggestions-box {
+  @apply mt-4 bg-white rounded-xl p-4 shadow-lg border border-gray-200;
+  /* Animación de entrada para sugerencias */
+  animation: slideIn 0.5s ease-out;
+}
 
-  /* Estilos para el toggle button en mobile-header */
-  .toggle-button {
-    @apply w-8 h-8 flex items-center justify-center rounded-full;
-  }
+.suggestions-box ul {
+  @apply list-disc ml-5;
+  /* Animación de entrada para items de la lista */
+  animation: fadeIn 0.5s ease-out 0.2s;
+}
 
-  .toggle-button:hover {
-    @apply bg-[#F3F4F6];
-  }
+.suggestions-box li {
+  @apply text-sm text-gray-600;
+  /* Animación de hover para items */
+  transition: color 0.3s ease-in-out;
+}
 
-  /* Estilos para la sección de viaje */
-  .trip-section {
-    @apply mt-8 px-6;
-  }
+.suggestions-box li:hover {
+  @apply text-[#3B325B];
+}
 
-  .trip-section h2 {
-    @apply text-2xl font-bold mb-6 text-[#E61C5D] font-['Archivo'];
-  }
+/* Ajuste para el selector manual */
+.manual-location-form {
+  @apply mb-6 bg-white rounded-xl p-4 shadow-lg border border-gray-200;
+  /* Animación de entrada para el formulario */
+  animation: slideIn 0.5s ease-out;
+}
 
-  .days-filter {
-    @apply mb-6;
-  }
+.manual-location-form input {
+  @apply border p-2 rounded text-sm transition-all duration-200;
+  /* Animación de focus para inputs */
+  transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
 
-  .days-filter button {
-    @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 min-w-[80px];
-  }
+.manual-location-form input:focus {
+  @apply border-[#E61C5D] ring-2 ring-[#E61C5D]/50;
+}
 
-  .days-filter button:hover {
-    @apply bg-gray-200;
-  }
+/* Ajuste para el mapa y la lista en el grid */
+.trip-map-container, .locations-list {
+  @apply transition-opacity duration-300;
+}
 
-  .days-filter button.bg-\[\#E61C5D\] {
-    @apply text-white;
-  }
-
-  .days-filter button.bg-gray-100 {
-    @apply text-gray-600;
-  }
-
-  /* Estilos para el grid de mapa y lista (sin @apply grid) */
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-
-    @media (min-width: 1024px) {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  .lg\:col-span-3 {
-    @media (min-width: 1024px) {
-      grid-column: span 3 / span 3;
-    }
-  }
-
-  /* Estilos para la lista de ubicaciones */
-  .locations-list {
-    @apply sticky top-4;
-  }
-
-  .locations-list .bg-white {
-    @apply rounded-xl p-4 shadow-lg border border-gray-200;
-  }
-
-  .locations-list h3 {
-    @apply text-lg font-semibold mb-4;
-  }
-
-  .location-item {
-    @apply mb-4 last:mb-0;
-  }
-
-  .location-item h4 {
-    @apply font-medium text-gray-800;
-  }
-
-  .location-item p {
-    @apply text-sm mt-1;
-  }
-
-  .location-item .font-medium {
-    font-weight: 500; /* Equivalente a font-medium en Tailwind */
-  }
-
-  .location-item .text-gray-600,
-  .location-item .text-gray-500,
-  .location-item .text-gray-800 {
-    @apply font-['Archivo'];
-  }
+.trip-map-container:hover, .locations-list:hover {
+  @apply opacity-90;
 }

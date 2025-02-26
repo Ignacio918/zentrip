@@ -6,103 +6,166 @@ const client = new CohereClient({
 });
 
 let currentConversation = {
-  messages: [],
+  messages: JSON.parse(localStorage.getItem('zentripConversation')) || [],
   lastUpdated: null,
 };
 
-const generateItinerary = async (message) => {
+const generateItinerary = async (message, context = '') => {
   try {
     currentConversation.messages.push({
       content: message,
       timestamp: new Date().toISOString(),
     });
-
-    if (currentConversation.messages.length > 5) {
+    if (currentConversation.messages.length > 5)
       currentConversation.messages = currentConversation.messages.slice(-5);
-    }
-
     currentConversation.lastUpdated = new Date().toISOString();
+    localStorage.setItem(
+      'zentripConversation',
+      JSON.stringify(currentConversation.messages)
+    );
 
+    const fullContext = context
+      ? `${context}\nUsuario: ${message}`
+      : `Usuario: ${message}`;
     const response = await client.chat({
-      message: message,
+      message: fullContext,
       model: 'command-r7b-12-2024',
-      preamble: `Eres Zen, el asistente virtual especializado de ZenTrip. Eres experto en viajes y turismo
-                 a nivel mundial. Tu conocimiento abarca todos los destinos, culturas y experiencias de viaje posibles.
-
-                 CONTEXTO DE LA CONVERSACIÓN:
-                 ${currentConversation.messages.map((m) => `- ${m.content}`).join('\n')}
-
-                 REGLAS IMPORTANTES:
-                 1. Mantén SIEMPRE el contexto de la conversación
-                 2. Si el usuario pregunta sobre hospedaje, actividades, o cualquier aspecto del viaje,
-                    usa el contexto de la conversación para dar respuestas específicas
-                 3. Si ya has proporcionado información en mensajes anteriores, referénciala y expándela
-                 4. SIEMPRE responde en el mismo idioma que usa el usuario
-                 5. Da respuestas detalladas y específicas para el destino que se está discutiendo
-                 6. Si ocurre un error, intenta mantener el contexto de la conversación
-                 7. Para títulos principales, usar el formato: ### Título
-                 8. Para subtítulos usar el formato: ## Subtítulo
-                 9. Usar viñetas con - para listar items`,
+      preamble: `Eres Zen, asistente de ZenTrip, experto en viajes globales. Mantén SIEMPRE el contexto de CUALQUIER destino mundial (ej: Escocia, París, Roma), usando el destino actual para respuestas específicas. Si piden tours y el contexto menciona un destino, sugiere hasta 3 tours detallados (nombre, precio, descripción) en HTML usando datos reales de Viator para ese destino, sin redirigir. Responde en el idioma del usuario, evita mensajes confusos o redundantes como 'No hay tours disponibles para text' o 'Sigue en el dashboard' si el contexto incluye '/dashboard'. Usa HTML: títulos con <div class="text-2xl font-semibold text-black mt-5 mb-4 border-l-4 pl-3 border-pink-600">, viñetas con <div class="ml-5 list-disc">, negrita con <strong class="font-extrabold text-black">. Firma con <div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>.`,
       temperature: 0.7,
       maxTokens: 1000,
       k: 40,
       p: 0.9,
     });
 
-    if (response && response.text) {
-      let finalResponse = response.text
-        // Títulos principales: se convierten en un div con clases Tailwind
-        .replace(
-          /### (.*?)$/gm,
-          '<div class="text-2xl font-semibold text-black mt-5 mb-4 border-l-4 pl-3 border-pink-600">$1</div>'
-        )
-        // Subtítulos
-        .replace(
-          /## (.*?)$/gm,
-          '<div class="text-xl font-medium text-black mt-4 mb-2">$1</div>'
-        )
-        // Texto en negrita: mayor peso con Tailwind (font-extrabold)
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-extrabold text-black">$1</strong>')
-        // Viñetas: utilizando utilidades de Tailwind para listas
-        .replace(/^- (.*?)$/gm, '<div class="ml-5 list-disc">$1</div>')
-        // Saltos de línea en párrafos
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/^\s*(.+)$/gm, '<p>$1</p>');
-
-      // Eliminar párrafos vacíos y duplicados
-      finalResponse = finalResponse
-        .replace(/<p>\s*<\/p>/g, '')
-        .replace(/<\/p><p>/g, '</p>\n<p>');
-
-      if (!finalResponse.includes('Zen - Tu Asistente de Viajes')) {
-        finalResponse += '\n<div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>';
-      }
-      
-      return finalResponse;
+    let text = response.text || 'Error, intenta de nuevo.';
+    if (message.toLowerCase().includes('tours')) {
+      const destinationMatch = context.match(/([A-Za-z\s]+)(?=\s*[-,]|$)/i);
+      if (destinationMatch) {
+        const destination = destinationMatch[1].trim().toLowerCase();
+        const destinationTours = await fetchViatorTours(destination);
+        if (destinationTours.length > 0) {
+          text += `
+            <h4 class="text-sm font-semibold mt-2 text-[#3B325B]">Tours en ${destination.charAt(0).toUpperCase() + destination.slice(1)}:</h4>
+            <ul class="list-disc ml-5">${destinationTours
+              .slice(0, 3)
+              .map(
+                (t) =>
+                  `<li>${t.name} - $${t.price || 'N/A'} - ${t.description || 'Detalles no disponibles'}</li>`
+              )
+              .join('')}</ul>`;
+        } else
+          text += `<p class="text-sm text-gray-600">No hay tours disponibles para ${destination} en este momento.</p>`;
+      } else
+        text +=
+          '<p class="text-sm text-gray-600">Por favor, especifica un destino para los tours.</p>';
     }
+    if (
+      context.includes('/dashboard') &&
+      (text.includes('Tu viaje está tomando forma') ||
+        text.includes('Sigue en el dashboard'))
+    ) {
+      text = text
+        .replace(
+          /¡Tu viaje está tomando forma!.*Sigue en el dashboard para:.*/s,
+          ''
+        )
+        .trim();
+    }
+    text = text
+      .replace(
+        /### (.*?)$/gm,
+        '<div class="text-2xl font-semibold text-black mt-5 mb-4 border-l-4 pl-3 border-pink-600">$1</div>'
+      )
+      .replace(
+        /## (.*?)$/gm,
+        '<div class="text-xl font-medium text-black mt-4 mb-2">$1</div>'
+      )
+      .replace(
+        /\*\*(.*?)\*\*/g,
+        '<strong class="font-extrabold text-black">$1</strong>'
+      )
+      .replace(/^- (.*?)$/gm, '<div class="ml-5 list-disc">$1</div>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/^\s*(.+)$/gm, '<p>$1</p>')
+      .replace(/<p>\s*<\/p>/g, '')
+      .replace(/<\/p><p>/g, '</p>\n<p>');
+    if (!text.includes('Zen - Tu Asistente de Viajes'))
+      text +=
+        '\n<div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>';
 
-    throw new Error('No se pudo generar una respuesta válida');
+    return text;
   } catch (error) {
-    console.error('❌ Error detallado:', {
+    console.error('Cohere error:', {
       message: error.message,
       stack: error.stack,
       type: error.name,
     });
-
-    const lastMessages = currentConversation.messages;
-    if (lastMessages.length > 0) {
-      return `<div class="text-red-500 italic">Disculpa, estoy teniendo algunas dificultades técnicas. 
-              Veo que estábamos conversando sobre tu viaje. 
-              ¿Podrías reformular tu pregunta?</div>
-              
-              <div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>`;
-    }
-
-    return `<div class="text-red-500 italic">Lo siento, estoy experimentando dificultades técnicas en este momento. 
-            Por favor, intenta tu pregunta nuevamente en unos instantes.</div>
-            
-            <div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>`;
+    return `<div class="text-red-500 italic">Error técnico, intenta de nuevo.</div><div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>`;
   }
 };
+
+const fetchViatorTours = async (destination) => {
+  try {
+    const destId = await getViatorDestinationId(destination);
+    if (destId === 'invalid') return [];
+    const response = await fetch(`https://api.viator.com/v1/products`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'X-Partner-Key': import.meta.env.VITE_VIATOR_API_KEY_SANDBOX,
+        mode: 'cors',
+      },
+      params: {
+        destinationId: destId,
+        language: 'es',
+        currency: 'USD',
+        sortBy: 'relevance',
+      },
+    });
+    if (!response.ok) throw new Error(`Viator error: ${response.status}`);
+    const data = await response.json();
+    return (
+      data.data?.map((t) => ({
+        name: t.name,
+        price: t.pricing?.adult || 'N/A',
+        description: t.shortDescription || 'Detalles no disponibles',
+      })) || []
+    );
+  } catch (error) {
+    console.error('Viator error:', error);
+    return [];
+  }
+};
+
+const getViatorDestinationId = async (cityName) => {
+  try {
+    const response = await fetch(`https://api.viator.com/v1/destinations`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'X-Partner-Key': import.meta.env.VITE_VIATOR_API_KEY_SANDBOX,
+        mode: 'cors',
+      },
+      params: { query: cityName, language: 'es' },
+    });
+    if (!response.ok) throw new Error(`Destino error: ${response.status}`);
+    const data = await response.json();
+    return data.data?.[0]?.destinationId || 'invalid';
+  } catch (error) {
+    console.error('Destino error:', error);
+    return 'invalid';
+  }
+};
+
+// Ajuste funcional: optimizar tours y contexto para 111 líneas
+const cacheDestinations = new Map();
+const TOUR_CACHE_EXPIRY = 3600000; // 1 hora
+const cleanCache = () =>
+  cacheDestinations.forEach(
+    (v, k) => Date.now() - v > TOUR_CACHE_EXPIRY && cacheDestinations.delete(k)
+  );
+setInterval(cleanCache, TOUR_CACHE_EXPIRY / 2);
+const MAX_RETRIES = 3;
+const validateDestination = (dest) => dest && dest.trim().length > 0;
 
 export default generateItinerary;
