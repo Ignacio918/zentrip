@@ -81,34 +81,18 @@ const Dashboard = () => {
           data: { user },
         } = await supabase.auth.getUser();
         if (!user) throw new Error('Usuario no autenticado');
-        const userId = user.id;
-        // Intentar consulta, pero no bloquear si falla
+        // Consulta opcional, no crítica
         const { data, error } = await supabase
           .from('users')
           .select('name, trip_date')
-          .eq('id', userId)
+          .eq('id', user.id)
           .single()
-          .catch(() => ({
-            data: null,
-            error: { message: 'Consulta fallida' },
-          }));
-        if (data) {
-          setUser({
-            ...user,
-            name: data.name || user.email.split('@')[0],
-            tripDate: data.trip_date ? new Date(data.trip_date) : null,
-          });
-        } else {
-          console.warn(
-            'No se encontraron datos de usuario, usando fallback:',
-            user.email.split('@')[0]
-          );
-          setUser({
-            ...user,
-            name: user.email.split('@')[0],
-            tripDate: null,
-          });
-        }
+          .catch(() => ({ data: null, error: null }));
+        setUser({
+          ...user,
+          name: data?.name || user.email.split('@')[0],
+          tripDate: data?.trip_date ? new Date(data.trip_date) : null,
+        });
       } catch (error) {
         console.warn(
           'Error al cargar datos del usuario (ignorado):',
@@ -331,10 +315,7 @@ const Dashboard = () => {
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleLocationClick = (location) => console.log('Ubicación:', location);
 
-  const handleChatSubmit = async (message) => {
-    const context = chatMessages
-      .map((msg) => `${msg.sender}: ${msg.text}`)
-      .join('\n');
+  const handleChatSubmit = async (message, context = '') => {
     try {
       const response = await generateItinerary(message, context);
       let finalResponse = response;
@@ -343,7 +324,9 @@ const Dashboard = () => {
         const destinationMatch = context.match(/([A-Za-z\s]+)(?=\s*[-,]|$)/i);
         if (destinationMatch) {
           const destination = destinationMatch[1].trim().toLowerCase();
-          const destinationTours = await fetchViatorTours(destination);
+          const destinationTours = tours.filter((t) =>
+            t.destination?.toLowerCase().includes(destination)
+          );
           if (destinationTours.length > 0) {
             finalResponse += `
               <h4 class="text-sm font-semibold mt-2 text-[#3B325B]">Tours en ${destination.charAt(0).toUpperCase() + destination.slice(1)}:</h4>
@@ -354,11 +337,13 @@ const Dashboard = () => {
                     `<li>${t.name} - $${t.price || 'N/A'} - ${t.description || 'Detalles no disponibles'}</li>`
                 )
                 .join('')}</ul>`;
-          } else
+          } else {
             finalResponse += `<p class="text-sm text-gray-600">No hay tours disponibles para ${destination} en este momento.</p>`;
-        } else
+          }
+        } else {
           finalResponse +=
             '<p class="text-sm text-gray-600">Por favor, especifica un destino para los tours.</p>';
+        }
       }
 
       if (
@@ -376,8 +361,8 @@ const Dashboard = () => {
 
       const newMessages = [
         ...chatMessages,
-        { text: message, sender: 'user' },
-        { text: finalResponse, sender: 'ai' },
+        { text: message, sender: 'user', timestamp: new Date() },
+        { text: finalResponse, sender: 'ai', timestamp: new Date() },
       ];
       setChatMessages(newMessages);
       localStorage.setItem('zentripConversation', JSON.stringify(newMessages));
@@ -388,8 +373,8 @@ const Dashboard = () => {
       const errorMessage = `Error técnico: ${error.message || 'Error desconocido'}`;
       const newMessages = [
         ...chatMessages,
-        { text: message, sender: 'user' },
-        { text: errorMessage, sender: 'ai' },
+        { text: message, sender: 'user', timestamp: new Date() },
+        { text: errorMessage, sender: 'ai', timestamp: new Date() },
       ];
       setChatMessages(newMessages);
       localStorage.setItem('zentripConversation', JSON.stringify(newMessages));
