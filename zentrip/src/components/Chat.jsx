@@ -64,26 +64,41 @@ const MovingBorder = ({ children, duration = 5000, rx, ry, ...otherProps }) => {
   const [isPathReady, setIsPathReady] = useState(false);
 
   useEffect(() => {
-    if (pathRef.current) {
-      setIsPathReady(true); // Asegura que el path esté listo
-    }
+    const observer = new ResizeObserver(() => {
+      if (pathRef.current && pathRef.current.getTotalLength) {
+        setIsPathReady(true);
+      }
+    });
+    if (pathRef.current) observer.observe(pathRef.current);
+    return () => observer.disconnect(); // Limpieza explícita
   }, []);
 
   useAnimationFrame((time) => {
-    if (!isPathReady || !pathRef.current) return;
+    if (!isPathReady || !pathRef.current || !pathRef.current.getTotalLength)
+      return;
     const length = pathRef.current.getTotalLength();
-    if (length) {
-      progress.set(((time * length) / duration) % length);
-    }
+    if (length) progress.set(((time * length) / duration) % length);
   });
 
   const x = useTransform(progress, (val) => {
-    if (!isPathReady || !pathRef.current) return 0;
-    return pathRef.current.getPointAtLength(val)?.x || 0;
+    if (!isPathReady || !pathRef.current || !pathRef.current.getPointAtLength)
+      return 0;
+    try {
+      return pathRef.current.getPointAtLength(val)?.x || 0;
+    } catch (error) {
+      console.warn('Error en getPointAtLength:', error);
+      return 0;
+    }
   });
   const y = useTransform(progress, (val) => {
-    if (!isPathReady || !pathRef.current) return 0;
-    return pathRef.current.getPointAtLength(val)?.y || 0;
+    if (!isPathReady || !pathRef.current || !pathRef.current.getPointAtLength)
+      return 0;
+    try {
+      return pathRef.current.getPointAtLength(val)?.y || 0;
+    } catch (error) {
+      console.warn('Error en getPointAtLength:', error);
+      return 0;
+    }
   });
   const transform = useMotionTemplate`translateX(${x}px) translateY(${y}px) translateX(-50%) translateY(-50%)`;
 
@@ -261,7 +276,7 @@ const Chat = ({
     );
 
   return (
-    <div className="chat-container hidden">
+    <div className="chat-container">
       <div className="chat-wrapper" ref={chatWrapperRef}>
         <div className="chat-background">
           <MovingBorder duration={5000} rx="8" ry="8">
@@ -323,6 +338,6 @@ const CHIP_SCROLL_SPEED = 50;
 const isPathValid = (path) =>
   path && path.getTotalLength && path.getTotalLength() > 0;
 const handlePathError = () =>
-  console.warn('SVG path is empty or invalid, skipping animation');
+  console.warn('SVG path is empty, skipping animation');
 
 export default Chat;
