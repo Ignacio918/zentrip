@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import DashboardNavbar from '../components/DashboardNavbar';
 import TripMap from '../components/TripMap';
-import Chat from '../components/Chat'; // Reutilizamos el chat adaptado
+import Chat from '../components/Chat';
 import { motion } from 'framer-motion';
 import '../styles/Dashboard.css';
 import { supabase } from '../supabaseClient';
@@ -11,6 +11,7 @@ import generateItinerary from '../cohereClient';
 
 const Dashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const pageName = getPageName(location.pathname);
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
@@ -25,66 +26,88 @@ const Dashboard = () => {
     name: '',
     day: 1,
     description: '',
-  }); // Selector manual
-  const [suggestedLocations, setSuggestedLocations] = useState([]); // Sugerencias del chat
-  const [tours, setTours] = useState([]); // Tours desde Viator
+  });
+  const [suggestedLocations, setSuggestedLocations] = useState([]);
+  const [tours, setTours] = useState([]);
 
-  // Cargar usuario desde Supabase
+  // Verifica sesión activa al cargar y redirige si no hay sesión
   useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+          navigate('/login');
+          return;
+        }
+        setUser({
+          name:
+            session.user.user_metadata?.full_name ||
+            session.user.email.split('@')[0],
+          tripDate: null,
+        });
+      } catch (error) {
+        setError('Error al verificar sesión: ' + error.message);
+        navigate('/login');
+      }
+    };
+    checkSession();
+
+    // Escucha cambios en la sesión (por ejemplo, logout)
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT' || !session) {
+          setUser(null);
+          navigate('/login');
+        } else if (event === 'SIGNED_IN') {
+          setUser({
+            name:
+              session.user.user_metadata?.full_name ||
+              session.user.email.split('@')[0],
+            tripDate: null,
+          });
+        }
+      }
+    );
+    return () => authListener.subscription.unsubscribe(); // Limpieza
+  }, [navigate]);
+
+  // Carga usuario desde Supabase si hay sesión activa
+  useEffect(() => {
+    if (!user) return;
     const getUserData = async () => {
       try {
         if (window.location.hostname === 'localhost') {
           setUser({ name: 'Ignacio Campos', tripDate: new Date() });
           return;
         }
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        if (!data.session) throw new Error('No hay sesión activa');
-        const userId = data.session.user.id;
-        const userEmail = data.session.user.email;
-        const { data: user, error: checkError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single();
-        if (checkError && checkError.code !== 'PGRST116') throw checkError;
-        if (!user) {
-          await supabase
-            .from('users')
-            .insert([
-              {
-                id: userId,
-                email: userEmail,
-                name: userEmail.split('@')[0] || 'Usuario',
-                preferencias: {},
-                trip_date: null,
-              },
-            ]);
-        }
-        const { data: userData, error: userError } = await supabase
+        const userId = supabase.auth.getUser().then(({ data }) => data.user.id);
+        const { data, error } = await supabase
           .from('users')
           .select('name, trip_date')
-          .eq('id', userId)
+          .eq('id', await userId)
           .single();
-        if (userError) throw userError;
+        if (error) throw error;
         setUser({
-          name: userData.name,
-          tripDate: userData.trip_date ? new Date(userData.trip_date) : null,
+          ...user,
+          name: data.name || user.name,
+          tripDate: data.trip_date ? new Date(data.trip_date) : null,
         });
       } catch (error) {
-        console.error('Error:', error);
         setError(error.message || 'Error desconocido');
       }
     };
     getUserData();
-  }, []);
+  }, [user]);
 
   // Parsear sugerencias del chat
   useEffect(() => {
     if (chatMessages.length > 0) parseChatToSuggestions(chatMessages);
   }, [chatMessages]);
 
-  // Fetch tours de Viator para sugerencias, con manejo de CORS y retries
+  // Fetch tours de Viator para sugerencias
   useEffect(() => {
     const fetchTours = async () => {
       if (suggestedLocations.length > 0) {
@@ -97,7 +120,7 @@ const Dashboard = () => {
               headers: {
                 Accept: 'application/json',
                 'X-Partner-Key': import.meta.env.VITE_VIATOR_API_KEY_SANDBOX,
-                mode: 'cors', // Explicit CORS mode for local dev
+                mode: 'cors',
               },
               params: {
                 destinationId: destId,
@@ -122,15 +145,15 @@ const Dashboard = () => {
           const toursData = await Promise.all(tourPromises);
           setTours(toursData.flat());
         } catch (error) {
-          console.error('Error en Viator:', error);
           setTours([]); // Fallback a vacío en caso de error
+          console.error('Error en Viator:', error);
         }
       } else setTours([]);
     };
     fetchTours();
   }, [suggestedLocations]);
 
-  // Obtener ID de destino de Viator con retries
+  // Obtener ID de destino de Viator
   const getViatorDestinationId = async (cityName, retries = 3) => {
     try {
       const response = await fetch(`https://api.viator.com/v1/destinations`, {
@@ -138,7 +161,7 @@ const Dashboard = () => {
         headers: {
           Accept: 'application/json',
           'X-Partner-Key': import.meta.env.VITE_VIATOR_API_KEY_SANDBOX,
-          mode: 'cors', // Explicit CORS mode
+          mode: 'cors',
         },
         params: { query: cityName, language: 'es' },
       });
@@ -147,7 +170,6 @@ const Dashboard = () => {
       const data = await response.json();
       return data.data?.[0]?.destinationId || 'invalid';
     } catch (error) {
-      console.error('Error ID destino:', error);
       if (retries > 0) return getViatorDestinationId(cityName, retries - 1);
       return 'invalid';
     }
@@ -216,13 +238,8 @@ const Dashboard = () => {
         );
         data = await res.json();
       }
-      console.log(
-        `Coords para ${cityName}:`,
-        data[0] ? [data[0].lat, data[0].lon] : 'Fallback'
-      );
       return data[0] ? [data[0].lat, data[0].lon] : [-34.6037, -58.3816];
     } catch (error) {
-      console.error('Error geocodificación:', error);
       return [-34.6037, -58.3816];
     }
   };
@@ -246,13 +263,12 @@ const Dashboard = () => {
               weather: `Clima: ${data.weather[0].description}, ${data.main.temp}°C`,
             })
         )
-        .catch((error) => {
-          console.error('Error clima:', error);
+        .catch((error) =>
           setWeatherInfo({
             location: loc.name,
             weather: 'Error al cargar el clima',
-          });
-        });
+          })
+        );
     } else setWeatherInfo(null);
   }, [locations]);
 
@@ -303,7 +319,6 @@ const Dashboard = () => {
     const response = await generateItinerary(message, context);
     let finalResponse = response;
 
-    // Inyectar tours de Viator si pide tours y menciona un destino
     if (message.toLowerCase().includes('tours')) {
       const destinationMatch = context.match(/([A-Za-z\s]+)(?=\s*[-,]|$)/i);
       if (destinationMatch) {
@@ -320,11 +335,12 @@ const Dashboard = () => {
               )
               .join('')}</ul>`;
         } else
-          finalResponse += `<p class="text-sm text-gray-600">No hay tours disponibles para ${destination} ahora.</p>`;
-      }
+          finalResponse += `<p class="text-sm text-gray-600">No hay tours disponibles para ${destination} en este momento.</p>`;
+      } else
+        finalResponse +=
+          '<p class="text-sm text-gray-600">Por favor, especifica un destino para los tours.</p>';
     }
 
-    // Eliminar mensajes redundantes en el dashboard
     if (
       location.pathname === '/dashboard' &&
       (finalResponse.includes('Tu viaje está tomando forma') ||
@@ -351,11 +367,14 @@ const Dashboard = () => {
 
   const saveItinerary = async () => {
     try {
+      const userId = await supabase.auth
+        .getUser()
+        .then(({ data }) => data.user.id);
       const { error } = await supabase
         .from('itineraries')
         .insert([
           {
-            user_id: user.id,
+            user_id: userId,
             locations: JSON.stringify(locations),
             created_at: new Date(),
           },
@@ -363,7 +382,6 @@ const Dashboard = () => {
       if (error) throw error;
       alert('Itinerario guardado en Zentrip');
     } catch (error) {
-      console.error('Error guardar:', error);
       alert('Error al guardar el itinerario');
     }
   };
@@ -415,7 +433,6 @@ const Dashboard = () => {
         })) || []
       );
     } catch (error) {
-      console.error('Viator tours error:', error);
       return [];
     }
   };
@@ -735,22 +752,3 @@ const getPageName = (pathname) => {
       return 'Dashboard';
   }
 };
-
-export default Dashboard;
-
-// Ajuste funcional para llegar a 549 líneas sin basura
-const validateLocation = (loc) =>
-  loc &&
-  loc.name &&
-  loc.coordinates &&
-  (loc.coordinates[0] || loc.coordinates[1]);
-const formatLocationBadges = (badges) =>
-  badges.map((b) => `<span class="badge-security">${b}</span>`).join('');
-const MAX_DAYS = 10;
-const DAY_CACHE = new Map();
-const CACHE_EXPIRY = 86400000; // 24 horas en ms
-const cleanDayCache = () =>
-  DAY_CACHE.forEach(
-    (v, k) => Date.now() - v.timestamp > CACHE_EXPIRY && DAY_CACHE.delete(k)
-  );
-setInterval(cleanDayCache, CACHE_EXPIRY / 2);
