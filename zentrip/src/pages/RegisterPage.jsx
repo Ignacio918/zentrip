@@ -308,10 +308,4 @@ const RegisterPage = () => {
   );
 };
 
-const LabelInputContainer = ({ children, className }) => {
-  return (
-    <div className={`label-input-container ${className || ''}`}>{children}</div>
-  );
-};
-
 export default RegisterPage;
