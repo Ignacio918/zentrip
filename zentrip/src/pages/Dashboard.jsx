@@ -33,7 +33,6 @@ const Dashboard = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // Esperar la sesión con un pequeño retraso para OAuth
         await new Promise((resolve) => setTimeout(resolve, 500));
         const {
           data: { session },
@@ -87,10 +86,10 @@ const Dashboard = () => {
           .from('users')
           .select('name, trip_date')
           .eq('id', userId)
-          .single(); // Asegura que devuelva un solo registro
+          .single();
         if (error) {
-          if (error.code === 'PGRST116') {
-            // Manejar caso de 0 filas (usuario no existe en la tabla)
+          console.warn('Error en consulta de usuario:', error);
+          if (error.status === 406 || error.code === 'PGRST116') {
             setUser({
               ...user,
               name: user.email.split('@')[0],
@@ -107,7 +106,7 @@ const Dashboard = () => {
           });
         }
       } catch (error) {
-        setError(error.message || 'Error al cargar datos del usuario');
+        setError('Error al cargar datos del usuario: ' + error.message);
       }
     };
     getUserData();
@@ -393,19 +392,20 @@ const Dashboard = () => {
         data: { user },
       } = await supabase.auth.getUser();
       const userId = user.id;
-      const { error } = await supabase
-        .from('itineraries')
-        .insert([
-          {
-            user_id: userId,
-            locations: JSON.stringify(locations),
-            created_at: new Date(),
-          },
-        ]);
-      if (error) throw error;
+      const { error } = await supabase.from('itineraries').insert([
+        {
+          user_id: userId,
+          locations: JSON.stringify(locations),
+          created_at: new Date(),
+        },
+      ]);
+      if (error) {
+        console.error('Error al guardar itinerario:', error);
+        throw error;
+      }
       alert('Itinerario guardado en Zentrip');
     } catch (error) {
-      alert('Error al guardar el itinerario');
+      alert('Error al guardar el itinerario: ' + error.message);
     }
   };
 
