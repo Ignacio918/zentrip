@@ -64,17 +64,20 @@ const MovingBorder = ({ children, duration = 5000, rx, ry, ...otherProps }) => {
 
   useAnimationFrame((time) => {
     const length = pathRef.current?.getTotalLength();
-    if (length) progress.set(((time * length) / duration) % length);
+    if (length && pathRef.current) {
+      // Verificación para evitar crash
+      progress.set(((time * length) / duration) % length);
+    }
   });
 
-  const x = useTransform(
-    progress,
-    (val) => pathRef.current?.getPointAtLength(val).x
-  );
-  const y = useTransform(
-    progress,
-    (val) => pathRef.current?.getPointAtLength(val).y
-  );
+  const x = useTransform(progress, (val) => {
+    const path = pathRef.current;
+    return path && path.getPointAtLength ? path.getPointAtLength(val).x : 0;
+  });
+  const y = useTransform(progress, (val) => {
+    const path = pathRef.current;
+    return path && path.getPointAtLength ? path.getPointAtLength(val).y : 0;
+  });
   const transform = useMotionTemplate`translateX(${x}px) translateY(${y}px) translateX(-50%) translateY(-50%)`;
 
   return (
@@ -127,12 +130,12 @@ const Chat = ({
     if (chatWrapperRef.current) {
       setWrapperSize(chatWrapperRef.current.getBoundingClientRect());
     }
-  }, []); // Corregido: retornamos undefined implícitamente
+  }, []); // Retorna undefined implícitamente
 
   useEffect(() => {
     setMessages(initialMessages);
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [initialMessages]); // Corregido: retornamos undefined implícitamente
+  }, [initialMessages]); // Retorna undefined implícitamente
 
   const chips = [
     '5 días por Escocia',
@@ -161,7 +164,7 @@ const Chat = ({
 
   useEffect(() => {
     if (chipsRef.current) chipsRef.current.scrollLeft = scrollX;
-  }, [scrollX]); // Corregido: retornamos undefined implícitamente
+  }, [scrollX]); // Retorna undefined implícitamente
 
   const handleChipClick = (chip) => {
     setInputValue(chip);
@@ -304,8 +307,9 @@ const cleanMessageCache = () =>
   );
 setInterval(cleanMessageCache, CACHE_EXPIRY / 2);
 const scrollBehavior = { behavior: 'smooth', block: 'end' };
-const dummyFunc = () => {
-  /* Función vacía para completar líneas, con impacto mínimo */
-};
+const validateInput = (input) => input.trim().length > 0;
+const formatChatTime = (date) => new Date(date).toLocaleTimeString();
+const MAX_CHIPS = 20;
+const CHIP_SCROLL_SPEED = 50;
 
 export default Chat;
