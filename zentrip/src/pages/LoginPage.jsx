@@ -22,12 +22,13 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (authError) {
-        setError(authError.message || 'Error al iniciar sesión');
+
+      if (error) {
+        setError(error.message);
       } else {
         navigate('/dashboard');
       }
@@ -38,26 +39,71 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setIsLoading(true);
     setError('');
 
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: 'https://zentrip.vercel.app/dashboard',
-        },
-      });
-      if (error) throw error;
+    const width = 500;
+    const height = 600;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
 
-      if (data.url) {
-        window.location.href = data.url; // Redirige al popup de Google
+    let authListener = null;
+    let popupClosed = false;
+
+    // Configuramos el listener de autenticación antes de abrir el popup
+    authListener = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigate('/dashboard');
+        if (authListener) authListener.unsubscribe();
       }
-    } catch (error) {
-      setError('No se pudo iniciar sesión con Google: ' + error.message);
+    });
+
+    const popup = window.open(
+      `https://szloqueilztpbdurfowm.supabase.co/auth/v1/authorize?provider=google&redirect_to=https://zentrip.vercel.app/dashboard`,
+      'GoogleSignIn',
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+
+    if (!popup) {
+      setError('No se pudo abrir el popup para la autenticación de Google.');
       setIsLoading(false);
+      if (authListener) authListener.unsubscribe();
+      return;
     }
+
+    const interval = setInterval(async () => {
+      if (popup.closed && !popupClosed) {
+        popupClosed = true;
+        clearInterval(interval);
+
+        try {
+          const {
+            data: { session },
+            error: sessionError,
+          } = await supabase.auth.getSession();
+
+          if (sessionError) throw sessionError;
+
+          if (!session?.user?.id) {
+            setError('No se completó el inicio de sesión con Google');
+            if (authListener) authListener.unsubscribe();
+          }
+        } catch (error) {
+          console.error('Error al verificar sesión:', error);
+          setError('Error al verificar la sesión');
+          if (authListener) authListener.unsubscribe();
+        }
+
+        setIsLoading(false);
+      }
+    }, 1000);
+
+    // Limpieza al desmontar
+    return () => {
+      clearInterval(interval);
+      if (authListener) authListener.unsubscribe();
+    };
   };
 
   return (
@@ -127,7 +173,8 @@ const LoginPage = () => {
           >
             {isLoading ? (
               <>
-                <span className="spinner"></span> Ingresando...
+                <span className="spinner"></span>
+                Ingresando...
               </>
             ) : (
               'Ingresar'
@@ -141,10 +188,16 @@ const LoginPage = () => {
             onClick={handleGoogleLogin}
             className={`auth-google-button ${isLoading ? 'button-loading' : ''}`}
             disabled={isLoading}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
             {isLoading ? (
               <>
-                <span className="spinner"></span> Conectando...
+                <span className="spinner"></span>
+                Conectando...
               </>
             ) : (
               <>
@@ -160,6 +213,8 @@ const LoginPage = () => {
               className={`auth-link ${isLoading ? 'pointer-events-none opacity-50' : ''}`}
               onClick={() => navigate('/register')}
               role="button"
+              tabIndex={0}
+              onKeyPress={(e) => e.key === 'Enter' && navigate('/register')}
             >
               Regístrate ahora
             </span>
@@ -172,18 +227,10 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
-
-// Ajuste funcional para llegar a ~200 líneas sin basura
-const validateLogin = (email, password) =>
-  email && password && email.includes('@');
-const formatAuthError = (msg) => msg.replace('Error:', '').trim();
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOGIN_CACHE = new Map();
-const CACHE_EXPIRY = 3600000; // 1 hora en ms
-const cleanLoginCache = () =>
-  LOGIN_CACHE.forEach(
-    (v, k) => Date.now() - v.timestamp > CACHE_EXPIRY && LOGIN_CACHE.delete(k)
+const LabelInputContainer = ({ children, className }) => {
+  return (
+    <div className={`label-input-container ${className || ''}`}>{children}</div>
   );
-setInterval(cleanLoginCache, CACHE_EXPIRY / 2);
-const handleOAuthError = (error) => `Error OAuth: ${error.message}`;
+};
+
+export default LoginPage;

@@ -93,37 +93,93 @@ const RegisterPage = () => {
     }
 
     try {
-      const { error: authError } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName } },
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
       });
-      if (authError) throw authError;
-      navigate('/dashboard');
+
+      if (error) {
+        setError(error.message);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
-      setError('Error al registrarse: ' + error.message);
+      setError('Ocurrió un error al intentar registrarse');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setIsLoading(true);
     setError('');
 
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: 'https://zentrip.vercel.app/dashboard',
-        },
-      });
-      if (error) throw error;
-      if (data.url) window.location.href = data.url;
-    } catch (error) {
-      setError('Error con Google: ' + error.message);
+    const width = 500;
+    const height = 600;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+
+    let authListener = null;
+    let popupClosed = false;
+
+    // Configuramos el listener de autenticación antes de abrir el popup
+    authListener = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigate('/dashboard');
+        if (authListener) authListener.unsubscribe();
+      }
+    });
+
+    const popup = window.open(
+      `https://szloqueilztpbdurfowm.supabase.co/auth/v1/authorize?provider=google&redirect_to=https://zentrip.vercel.app/dashboard`,
+      'GoogleSignIn',
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+
+    if (!popup) {
+      setError('No se pudo abrir el popup para la autenticación de Google.');
       setIsLoading(false);
+      if (authListener) authListener.unsubscribe();
+      return;
     }
+
+    const interval = setInterval(async () => {
+      if (popup.closed && !popupClosed) {
+        popupClosed = true;
+        clearInterval(interval);
+
+        try {
+          const {
+            data: { session },
+            error: sessionError,
+          } = await supabase.auth.getSession();
+
+          if (sessionError) throw sessionError;
+
+          if (!session?.user?.id) {
+            setError('No se completó el inicio de sesión con Google');
+            if (authListener) authListener.unsubscribe();
+          }
+        } catch (error) {
+          console.error('Error al verificar sesión:', error);
+          setError('Error al verificar la sesión');
+          if (authListener) authListener.unsubscribe();
+        }
+
+        setIsLoading(false);
+      }
+    }, 1000);
+
+    // Limpieza al desmontar
+    return () => {
+      clearInterval(interval);
+      if (authListener) authListener.unsubscribe();
+    };
   };
 
   return (
@@ -284,6 +340,8 @@ const RegisterPage = () => {
               className="auth-link"
               onClick={() => navigate('/login')}
               role="button"
+              tabIndex={0}
+              onKeyPress={(e) => e.key === 'Enter' && navigate('/login')}
             >
               Inicia sesión
             </span>
@@ -293,6 +351,12 @@ const RegisterPage = () => {
         {error && <p className="auth-error">{error}</p>}
       </div>
     </div>
+  );
+};
+
+const LabelInputContainer = ({ children, className }) => {
+  return (
+    <div className={`label-input-container ${className || ''}`}>{children}</div>
   );
 };
 

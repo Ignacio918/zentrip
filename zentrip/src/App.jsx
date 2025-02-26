@@ -1,15 +1,18 @@
-import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import Landing from "./pages/Landing";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import Dashboard from "./pages/Dashboard";
+import React from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import Landing from './pages/Landing';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import Dashboard from './pages/Dashboard';
 
 const NavbarFooterWrapper = () => {
   const location = useLocation();
-  const hideNavbarFooter = location.pathname === "/login" || location.pathname === "/register" || location.pathname.startsWith("/dashboard");
+  const hideNavbarFooter =
+    location.pathname === '/login' ||
+    location.pathname === '/register' ||
+    location.pathname.startsWith('/dashboard');
 
   return (
     <>
@@ -30,3 +33,4 @@ const App = () => {
 };
 
 export default App;
+s
