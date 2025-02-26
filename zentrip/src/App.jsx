@@ -21,11 +21,19 @@ const NavbarFooterWrapper = () => {
       setIsLoggedIn(!!session);
       setLoading(false);
     };
+
+    // Ejecutar inmediatamente y esperar la sincronización
     checkSession();
 
+    // Listener para cambios de estado de autenticación
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (event, session) => {
         setIsLoggedIn(!!session);
+        if (event === 'SIGNED_IN' && session) {
+          // Forzar recarga de sesión tras OAuth
+          const { data: refreshedSession } = await supabase.auth.getSession();
+          setIsLoggedIn(!!refreshedSession.session);
+        }
       }
     );
 

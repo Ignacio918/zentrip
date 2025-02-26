@@ -118,18 +118,17 @@ const RegisterPage = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError('');
-
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://zentrip.vercel.app/dashboard',
+          redirectTo:
+            window.location.origin === 'http://localhost:5173'
+              ? 'http://localhost:5173/dashboard'
+              : 'https://zentrip.vercel.app/dashboard',
         },
       });
       if (error) throw error;
-      if (data.url) {
-        window.location.href = data.url; // Redirección directa al flujo de OAuth
-      }
     } catch (error) {
       setError('Error al registrarse con Google: ' + error.message);
       setIsLoading(false);

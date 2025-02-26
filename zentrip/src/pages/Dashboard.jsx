@@ -30,10 +30,11 @@ const Dashboard = () => {
   const [suggestedLocations, setSuggestedLocations] = useState([]);
   const [tours, setTours] = useState([]);
 
-  // Verifica sesión activa al cargar y redirige si no hay sesión
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // Esperar la sesión con un pequeño retraso para OAuth
+        await new Promise((resolve) => setTimeout(resolve, 500));
         const {
           data: { session },
           error: sessionError,
@@ -55,9 +56,8 @@ const Dashboard = () => {
     };
     checkSession();
 
-    // Escucha cambios en la sesión (por ejemplo, logout)
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (event === 'SIGNED_OUT' || !session) {
           setUser(null);
           navigate('/login');
@@ -71,10 +71,9 @@ const Dashboard = () => {
         }
       }
     );
-    return () => authListener.subscription.unsubscribe(); // Limpieza
+    return () => authListener.subscription.unsubscribe();
   }, [navigate]);
 
-  // Carga usuario desde Supabase si hay sesión activa
   useEffect(() => {
     if (!user) return;
     const getUserData = async () => {
@@ -102,12 +101,10 @@ const Dashboard = () => {
     getUserData();
   }, [user]);
 
-  // Parsear sugerencias del chat
   useEffect(() => {
     if (chatMessages.length > 0) parseChatToSuggestions(chatMessages);
   }, [chatMessages]);
 
-  // Fetch tours de Viator para sugerencias
   useEffect(() => {
     const fetchTours = async () => {
       if (suggestedLocations.length > 0) {
@@ -145,7 +142,7 @@ const Dashboard = () => {
           const toursData = await Promise.all(tourPromises);
           setTours(toursData.flat());
         } catch (error) {
-          setTours([]); // Fallback a vacío en caso de error
+          setTours([]);
           console.error('Error en Viator:', error);
         }
       } else setTours([]);
@@ -153,7 +150,6 @@ const Dashboard = () => {
     fetchTours();
   }, [suggestedLocations]);
 
-  // Obtener ID de destino de Viator
   const getViatorDestinationId = async (cityName, retries = 3) => {
     try {
       const response = await fetch(`https://api.viator.com/v1/destinations`, {
