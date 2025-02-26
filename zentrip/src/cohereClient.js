@@ -1,43 +1,26 @@
-import { CohereClient } from 'cohere-ai';
-
-const client = new CohereClient({
-  token: import.meta.env.VITE_COHERE_API_KEY,
-  timeout: 15000,
-});
-
-let currentConversation = {
-  messages: JSON.parse(localStorage.getItem('zentripConversation')) || [],
-  lastUpdated: null,
-};
-
 const generateItinerary = async (message, context = '') => {
   try {
-    currentConversation.messages.push({
-      content: message,
-      timestamp: new Date().toISOString(),
-    });
-    if (currentConversation.messages.length > 5)
-      currentConversation.messages = currentConversation.messages.slice(-5);
-    currentConversation.lastUpdated = new Date().toISOString();
-    localStorage.setItem(
-      'zentripConversation',
-      JSON.stringify(currentConversation.messages)
-    );
-
     const fullContext = context
       ? `${context}\nUsuario: ${message}`
       : `Usuario: ${message}`;
-    const response = await client.chat({
-      message: fullContext,
-      model: 'command-r7b-12-2024',
-      preamble: `Eres Zen, asistente de ZenTrip, experto en viajes globales. Mantén SIEMPRE el contexto de CUALQUIER destino mundial (ej: Escocia, París, Roma), usando el destino actual para respuestas específicas. Si piden tours y el contexto menciona un destino, sugiere hasta 3 tours detallados (nombre, precio, descripción) en HTML usando datos reales de Viator para ese destino, sin redirigir. Responde en el idioma del usuario, evita mensajes confusos o redundantes como 'No hay tours disponibles para text' o 'Sigue en el dashboard' si el contexto incluye '/dashboard'. Usa HTML: títulos con <div class="text-2xl font-semibold text-black mt-5 mb-4 border-l-4 pl-3 border-pink-600">, viñetas con <div class="ml-5 list-disc">, negrita con <strong class="font-extrabold text-black">. Firma con <div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>.`,
-      temperature: 0.7,
-      maxTokens: 1000,
-      k: 40,
-      p: 0.9,
+    const response = await fetch('https://api.cohere.ai/v1/chat', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_COHERE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: fullContext,
+        model: 'command-r7b-12-2024',
+        preamble: `Eres Zen, asistente de ZenTrip, experto en viajes globales. Mantén SIEMPRE el contexto de CUALQUIER destino mundial (ej: Escocia, París, Roma), usando el destino actual para respuestas específicas. Si piden tours y el contexto menciona un destino, sugiere hasta 3 tours detallados (nombre, precio, descripción) en HTML usando datos reales de Viator para ese destino, sin redirigir. Responde en el idioma del usuario, evita mensajes confusos o redundantes como 'No hay tours disponibles para text' o 'Sigue en el dashboard' si el contexto incluye '/dashboard'. Usa HTML: títulos con <div class="text-2xl font-semibold text-black mt-5 mb-4 border-l-4 pl-3 border-pink-600">, viñetas con <div class="ml-5 list-disc">, negrita con <strong class="font-extrabold text-black">. Firma con <div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>.`,
+        temperature: 0.7,
+        maxTokens: 1000,
+      }),
     });
+    if (!response.ok) throw new Error(`Cohere API error: ${response.status}`);
+    const data = await response.json();
+    let text = data.text || 'Error, intenta de nuevo.';
 
-    let text = response.text || 'Error, intenta de nuevo.';
     if (message.toLowerCase().includes('tours')) {
       const destinationMatch = context.match(/([A-Za-z\s]+)(?=\s*[-,]|$)/i);
       if (destinationMatch) {
@@ -59,6 +42,7 @@ const generateItinerary = async (message, context = '') => {
         text +=
           '<p class="text-sm text-gray-600">Por favor, especifica un destino para los tours.</p>';
     }
+
     if (
       context.includes('/dashboard') &&
       (text.includes('Tu viaje está tomando forma') ||
@@ -95,12 +79,8 @@ const generateItinerary = async (message, context = '') => {
 
     return text;
   } catch (error) {
-    console.error('Cohere error:', {
-      message: error.message,
-      stack: error.stack,
-      type: error.name,
-    });
-    return `<div class="text-red-500 italic">Error técnico, intenta de nuevo.</div><div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>`;
+    console.error('Cohere error:', error);
+    return `<div class="text-red-500 italic">Error técnico, intenta de nuevo: ${error.message}</div><div class="text-sm text-gray-500 italic mt-4">Zen - Tu Asistente de Viajes</div>`;
   }
 };
 
@@ -157,7 +137,6 @@ const getViatorDestinationId = async (cityName) => {
   }
 };
 
-// Ajuste funcional: optimizar tours y contexto para 111 líneas
 const cacheDestinations = new Map();
 const TOUR_CACHE_EXPIRY = 3600000; // 1 hora
 const cleanCache = () =>

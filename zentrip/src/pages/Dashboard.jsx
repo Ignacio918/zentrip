@@ -82,31 +82,43 @@ const Dashboard = () => {
         } = await supabase.auth.getUser();
         if (!user) throw new Error('Usuario no autenticado');
         const userId = user.id;
+        // Intentar consulta, pero no bloquear si falla
         const { data, error } = await supabase
           .from('users')
           .select('name, trip_date')
           .eq('id', userId)
-          .single();
-        if (error) {
-          console.warn('Error en consulta de usuario:', error);
-          if (error.status === 406 || error.code === 'PGRST116') {
-            setUser({
-              ...user,
-              name: user.email.split('@')[0],
-              tripDate: null,
-            });
-          } else {
-            throw error;
-          }
-        } else {
+          .single()
+          .catch(() => ({
+            data: null,
+            error: { message: 'Consulta fallida' },
+          }));
+        if (data) {
           setUser({
             ...user,
             name: data.name || user.email.split('@')[0],
             tripDate: data.trip_date ? new Date(data.trip_date) : null,
           });
+        } else {
+          console.warn(
+            'No se encontraron datos de usuario, usando fallback:',
+            user.email.split('@')[0]
+          );
+          setUser({
+            ...user,
+            name: user.email.split('@')[0],
+            tripDate: null,
+          });
         }
       } catch (error) {
-        setError('Error al cargar datos del usuario: ' + error.message);
+        console.warn(
+          'Error al cargar datos del usuario (ignorado):',
+          error.message
+        );
+        setUser({
+          ...user,
+          name: user.email.split('@')[0],
+          tripDate: null,
+        });
       }
     };
     getUserData();
