@@ -78,24 +78,36 @@ const Dashboard = () => {
     if (!user) return;
     const getUserData = async () => {
       try {
-        if (window.location.hostname === 'localhost') {
-          setUser({ name: 'Ignacio Campos', tripDate: new Date() });
-          return;
-        }
-        const userId = supabase.auth.getUser().then(({ data }) => data.user.id);
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error('Usuario no autenticado');
+        const userId = user.id;
         const { data, error } = await supabase
           .from('users')
           .select('name, trip_date')
-          .eq('id', await userId)
-          .single();
-        if (error) throw error;
-        setUser({
-          ...user,
-          name: data.name || user.name,
-          tripDate: data.trip_date ? new Date(data.trip_date) : null,
-        });
+          .eq('id', userId)
+          .single(); // Asegura que devuelva un solo registro
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // Manejar caso de 0 filas (usuario no existe en la tabla)
+            setUser({
+              ...user,
+              name: user.email.split('@')[0],
+              tripDate: null,
+            });
+          } else {
+            throw error;
+          }
+        } else {
+          setUser({
+            ...user,
+            name: data.name || user.email.split('@')[0],
+            tripDate: data.trip_date ? new Date(data.trip_date) : null,
+          });
+        }
       } catch (error) {
-        setError(error.message || 'Error desconocido');
+        setError(error.message || 'Error al cargar datos del usuario');
       }
     };
     getUserData();
@@ -363,18 +375,17 @@ const Dashboard = () => {
 
   const saveItinerary = async () => {
     try {
-      const userId = await supabase.auth
-        .getUser()
-        .then(({ data }) => data.user.id);
-      const { error } = await supabase
-        .from('itineraries')
-        .insert([
-          {
-            user_id: userId,
-            locations: JSON.stringify(locations),
-            created_at: new Date(),
-          },
-        ]);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const userId = user.id;
+      const { error } = await supabase.from('itineraries').insert([
+        {
+          user_id: userId,
+          locations: JSON.stringify(locations),
+          created_at: new Date(),
+        },
+      ]);
       if (error) throw error;
       alert('Itinerario guardado en Zentrip');
     } catch (error) {
