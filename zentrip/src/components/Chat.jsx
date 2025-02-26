@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '../supabaseClient';
 import { LucideSend } from 'lucide-react';
 import generateItinerary from '../cohereClient';
 import '../styles/Chat.css';
@@ -11,15 +10,27 @@ const Chat = ({
   initialMessages = [],
   tours = [],
 }) => {
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState(() => {
+    // Validar y normalizar initialMessages desde localStorage
+    const storedMessages = initialMessages.map((msg) => ({
+      ...msg,
+      timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+    }));
+    return storedMessages;
+  });
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(forceExpanded);
-  const chatContainerRef = useRef(null);
   const [showTours, setShowTours] = useState(false);
+  const chatContainerRef = useRef(null);
 
   useEffect(() => {
-    setMessages(initialMessages);
+    // Normalizar messages al actualizar initialMessages
+    const normalizedMessages = initialMessages.map((msg) => ({
+      ...msg,
+      timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+    }));
+    setMessages(normalizedMessages);
   }, [initialMessages]);
 
   useEffect(() => {
@@ -90,6 +101,7 @@ const Chat = ({
       setMessages((prev) => [...prev, aiMessage]);
       if (onSubmit) onSubmit(response);
     } catch (error) {
+      console.error('Error en chat:', error);
       setMessages((prev) => [
         ...prev,
         {
