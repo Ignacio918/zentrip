@@ -15,22 +15,32 @@ const NavbarFooterWrapper = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let timeoutId;
     const checkSession = async () => {
       try {
+        // Establecer un tiempo máximo de espera (10 segundos)
+        timeoutId = setTimeout(() => {
+          console.warn('Tiempo de espera agotado para getSession');
+          setLoading(false);
+          setIsLoggedIn(false); // Fallback si no responde
+        }, 10000);
+
         const {
           data: { session },
           error: sessionError,
         } = await supabase.auth.getSession();
         if (sessionError) {
           console.error('Error al obtener sesión:', sessionError.message);
-          setIsLoggedIn(false); // Fallback a no autenticado si falla
+          setIsLoggedIn(false);
         } else {
           setIsLoggedIn(!!session);
         }
       } catch (error) {
         console.error('Error en checkSession:', error.message);
-        setIsLoggedIn(false); // Evitar que se quede bloqueado
+        setError('Error al inicializar la sesión: ' + error.message);
+        setIsLoggedIn(false);
       } finally {
+        clearTimeout(timeoutId); // Limpiar el timeout si se resuelve
         setLoading(false);
       }
     };
@@ -53,6 +63,7 @@ const NavbarFooterWrapper = () => {
     );
 
     return () => {
+      clearTimeout(timeoutId); // Limpiar timeout en caso de desmontaje
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -63,7 +74,12 @@ const NavbarFooterWrapper = () => {
     location.pathname.startsWith('/dashboard');
 
   if (loading) {
-    return <div>Loading...</div>; // Mostrar loading mientras se chequea
+    return (
+      <div>
+        Loading...
+        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+      </div>
+    ); // Mostrar loading con posible error
   }
 
   return (
