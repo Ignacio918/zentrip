@@ -752,3 +752,5 @@ const getPageName = (pathname) => {
       return 'Dashboard';
   }
 };
+
+export default Dashboard;
