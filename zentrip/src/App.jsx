@@ -12,27 +12,42 @@ const NavbarFooterWrapper = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-      setLoading(false);
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error('Error al obtener sesión:', sessionError.message);
+          setIsLoggedIn(false); // Fallback a no autenticado si falla
+        } else {
+          setIsLoggedIn(!!session);
+        }
+      } catch (error) {
+        console.error('Error en checkSession:', error.message);
+        setIsLoggedIn(false); // Evitar que se quede bloqueado
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // Ejecutar inmediatamente y esperar la sincronización
     checkSession();
 
-    // Listener para cambios de estado de autenticación
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setIsLoggedIn(!!session);
-        if (event === 'SIGNED_IN' && session) {
-          // Forzar recarga de sesión tras OAuth
-          const { data: refreshedSession } = await supabase.auth.getSession();
-          setIsLoggedIn(!!refreshedSession.session);
+        try {
+          setIsLoggedIn(!!session);
+          if (event === 'SIGNED_IN' && session) {
+            const { data: refreshedSession } = await supabase.auth.getSession();
+            setIsLoggedIn(!!refreshedSession.session);
+          }
+        } catch (error) {
+          console.error('Error en onAuthStateChange:', error.message);
+          setIsLoggedIn(false);
         }
       }
     );
@@ -48,7 +63,7 @@ const NavbarFooterWrapper = () => {
     location.pathname.startsWith('/dashboard');
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>; // Mostrar loading mientras se chequea
   }
 
   return (
