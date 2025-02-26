@@ -61,22 +61,29 @@ function MessageLoading() {
 const MovingBorder = ({ children, duration = 5000, rx, ry, ...otherProps }) => {
   const pathRef = useRef(null);
   const progress = useMotionValue(0);
+  const [isPathReady, setIsPathReady] = useState(false);
+
+  useEffect(() => {
+    if (pathRef.current) {
+      setIsPathReady(true); // Asegura que el path esté listo
+    }
+  }, []);
 
   useAnimationFrame((time) => {
-    const length = pathRef.current?.getTotalLength();
-    if (length && pathRef.current) {
-      // Verificación para evitar crash
+    if (!isPathReady || !pathRef.current) return;
+    const length = pathRef.current.getTotalLength();
+    if (length) {
       progress.set(((time * length) / duration) % length);
     }
   });
 
   const x = useTransform(progress, (val) => {
-    const path = pathRef.current;
-    return path && path.getPointAtLength ? path.getPointAtLength(val).x : 0;
+    if (!isPathReady || !pathRef.current) return 0;
+    return pathRef.current.getPointAtLength(val)?.x || 0;
   });
   const y = useTransform(progress, (val) => {
-    const path = pathRef.current;
-    return path && path.getPointAtLength ? path.getPointAtLength(val).y : 0;
+    if (!isPathReady || !pathRef.current) return 0;
+    return pathRef.current.getPointAtLength(val)?.y || 0;
   });
   const transform = useMotionTemplate`translateX(${x}px) translateY(${y}px) translateX(-50%) translateY(-50%)`;
 
@@ -99,12 +106,14 @@ const MovingBorder = ({ children, duration = 5000, rx, ry, ...otherProps }) => {
           ref={pathRef}
         />
       </svg>
-      <motion.div
-        style={{ transform }}
-        className="absolute inset-0 flex items-center justify-center"
-      >
-        {children}
-      </motion.div>
+      {isPathReady && (
+        <motion.div
+          style={{ transform }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          {children}
+        </motion.div>
+      )}
     </>
   );
 };
@@ -311,5 +320,9 @@ const validateInput = (input) => input.trim().length > 0;
 const formatChatTime = (date) => new Date(date).toLocaleTimeString();
 const MAX_CHIPS = 20;
 const CHIP_SCROLL_SPEED = 50;
+const isPathValid = (path) =>
+  path && path.getTotalLength && path.getTotalLength() > 0;
+const handlePathError = () =>
+  console.warn('SVG path is empty or invalid, skipping animation');
 
 export default Chat;
