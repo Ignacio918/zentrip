@@ -1,25 +1,30 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import svgr from "vite-plugin-svgr";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import svgr from 'vite-plugin-svgr';
+import viteMockServe from 'vite-plugin-mock';
 
 export default defineConfig({
   plugins: [
     react(),
     svgr(),
+    viteMockServe({
+      mockPath: 'mock',
+      localEnabled: true, // Habilita mocks en desarrollo local
+    }),
   ],
   build: {
-    minify: 'esbuild', // Minificar código
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            return 'vendor'; // Separar dependencias
+            return 'vendor';
           }
         },
       },
     },
   },
   optimizeDeps: {
-    include: ['framer-motion'], // Pre-cargar dependencias comunes
+    include: ['framer-motion'],
   },
 });
