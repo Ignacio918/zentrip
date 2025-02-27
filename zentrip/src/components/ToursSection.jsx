@@ -8,16 +8,15 @@ const ToursSection = () => {
   useEffect(() => {
     const fetchTours = async () => {
       try {
-        const response = await fetch(
-          'https://api.viator.com/partner/v2/products/search?destinationId=Paris&limit=5',
-          {
-            headers: {
-              Authorization: `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_PROD}`,
-              Accept: 'application/json',
-              'Accept-Language': 'en', // Añadido para localization, opcional
-            },
-          }
-        );
+        const response = await fetch('/api/viator-tours', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_PROD}`,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Accept-Language': 'en',
+          },
+        });
         if (!response.ok) {
           throw new Error(
             `Error HTTP: ${response.status} - ${response.statusText}`
@@ -25,8 +24,7 @@ const ToursSection = () => {
         }
         const data = await response.json();
         console.log('Respuesta completa de Viator:', data);
-        // Ajuste para la estructura de datos de v2, que usa "data" como raíz
-        setTours(data.data ? data.data.slice(0, 5) : []);
+        setTours(data.products ? data.products.slice(0, 5) : []);
       } catch (error) {
         console.error('Detalles del error fetching tours:', error);
         setError(
@@ -83,4 +81,67 @@ const ToursSection = () => {
   );
 };
 
+// Proxy integrado como función de API dentro del mismo archivo (para Vercel)
 export default ToursSection;
+
+export async function getServerSideProps() {
+  try {
+    const body = {
+      filtering: {
+        destination: '732',
+        tags: [21972],
+        flags: ['LIKELY_TO_SELL_OUT', 'FREE_CANCELLATION'],
+        lowestPrice: 5,
+        highestPrice: 500,
+        startDate: '2025-02-28', // Fecha futura válida
+        endDate: '2025-03-28',
+        includeAutomaticTranslations: true,
+        confirmationType: 'INSTANT',
+        durationInMinutes: {
+          from: 20,
+          to: 360,
+        },
+        rating: {
+          from: 3,
+          to: 5,
+        },
+      },
+      sorting: {
+        sort: 'TRAVELER_RATING',
+        order: 'DESCENDING',
+      },
+      pagination: {
+        start: 1,
+        count: 5,
+      },
+      currency: 'USD',
+    };
+
+    const response = await fetch(
+      'https://api.viator.com/partner/products/search',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.VITE_VIATOR_API_KEY_PROD}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Accept-Language': 'en',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Error HTTP: ${response.status} - ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+    console.log('Respuesta completa de Viator desde proxy:', data);
+    return { props: { initialTours: data.products || [] } };
+  } catch (error) {
+    console.error('Error en proxy de Viator:', error);
+    return { props: { initialTours: [], error: error.message } };
+  }
+}
