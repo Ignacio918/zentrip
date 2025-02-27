@@ -8,22 +8,23 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 
-const NavbarFooterWrapper = () => {
-  const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+const ProtectedRoute = ({ children }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => localStorage.getItem('isLoggedIn') === 'true'
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let timeoutId;
     const checkSession = async () => {
-      console.log('Iniciando checkSession...');
+      console.log('Iniciando checkSession en ruta protegida...');
       try {
         timeoutId = setTimeout(() => {
           console.warn('Tiempo de espera agotado para getSession');
           setLoading(false);
           setIsLoggedIn(false);
-        }, 10000);
+        }, 3000);
 
         console.log('Llamando a supabase.auth.getSession...');
         const {
@@ -37,6 +38,7 @@ const NavbarFooterWrapper = () => {
           setIsLoggedIn(false);
         } else {
           setIsLoggedIn(!!session);
+          localStorage.setItem('isLoggedIn', !!session);
         }
       } catch (error) {
         console.error('Error en checkSession:', error.message);
@@ -56,10 +58,12 @@ const NavbarFooterWrapper = () => {
         console.log('Cambio de estado de autenticación:', event);
         try {
           setIsLoggedIn(!!session);
+          localStorage.setItem('isLoggedIn', !!session);
           if (event === 'SIGNED_IN' && session) {
             const { data: refreshedSession } = await supabase.auth.getSession();
             console.log('Sesión refreshed:', refreshedSession);
             setIsLoggedIn(!!refreshedSession.session);
+            localStorage.setItem('isLoggedIn', !!refreshedSession.session);
           }
         } catch (error) {
           console.error('Error en onAuthStateChange:', error.message);
@@ -74,45 +78,75 @@ const NavbarFooterWrapper = () => {
     };
   }, []);
 
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
+        <p>Loading...</p>
+        {error && (
+          <p style={{ color: 'red', marginTop: '10px' }}>Error: {error}</p>
+        )}
+      </div>
+    );
+  }
+
+  return isLoggedIn ? children : <Navigate to="/login" />;
+};
+
+const NavbarFooterWrapper = ({ children }) => {
+  const location = useLocation();
   const hideNavbarFooter =
     location.pathname === '/login' ||
     location.pathname === '/register' ||
     location.pathname.startsWith('/dashboard');
 
-  if (loading) {
-    return (
-      <div>
-        Loading...
-        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-      </div>
-    );
-  }
-
   return (
     <>
       {!hideNavbarFooter && <Navbar />}
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route
-          path="/login"
-          element={isLoggedIn ? <Navigate to="/dashboard" /> : <LoginPage />}
-        />
-        <Route
-          path="/register"
-          element={isLoggedIn ? <Navigate to="/dashboard" /> : <RegisterPage />}
-        />
-        <Route
-          path="/dashboard/*"
-          element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
-        />
-      </Routes>
+      {children}
       {!hideNavbarFooter && <Footer />}
     </>
   );
 };
 
 const App = () => {
-  return <NavbarFooterWrapper />;
+  return (
+    <NavbarFooterWrapper>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route
+          path="/login"
+          element={
+            <ProtectedRoute>
+              <LoginPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <ProtectedRoute>
+              <RegisterPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </NavbarFooterWrapper>
+  );
 };
 
 export default App;

@@ -27,7 +27,7 @@
   width: 160px;
   height: 160px;
   opacity: 0.5;
-  background: radial-gradient(#AAA1F1 40%, transparent 60%);
+  background: radial-gradient(#aaa1f1 40%, transparent 60%);
 }
 
 .chat-content {
@@ -50,7 +50,7 @@
   padding: 14px;
   color: #1f2937;
   font-size: 16px;
-  font-family: "Archivo", sans-serif;
+  font-family: 'Archivo', sans-serif;
   font-weight: normal;
   border: none;
   resize: none;
@@ -72,8 +72,8 @@
 }
 
 .chat-send-button {
-  background: #FDE8EF;
-  border: 1px solid #E61C5D;
+  background: #fde8ef;
+  border: 1px solid #e61c5d;
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -132,11 +132,14 @@
   border: 1px solid #dbdcdd;
   color: #979797;
   font-size: 14px;
-  font-family: "Archivo", sans-serif;
+  font-family: 'Archivo', sans-serif;
   font-weight: normal;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    transform 0.2s,
+    border-color 0.2s;
   margin-right: 8px; /* Espacio entre chips para evitar superposición */
 }
 
@@ -149,7 +152,7 @@
 .chat-expanded {
   width: 100%;
   max-width: 1098px;
-  height: 523px;
+  height: 650px; /* Aumentado de 523px a 650px */
   background-color: #fefefe;
   border-radius: 12px;
   border: 1px solid #dbdcdd;
@@ -162,8 +165,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #3B325B;
-  font-size: 18px;
+  color: #3b325b;
+  font-size: 22px; /* Aumentado de 18px a 22px */
   font-weight: 600;
   font-family: 'Archivo', sans-serif;
   margin-bottom: 20px;
@@ -241,7 +244,7 @@
 
 .message-text {
   color: #3e3e3e;
-  font-size: 16px;
+  font-size: 18px; /* Aumentado de 16px a 18px */
   font-family: 'Archivo', sans-serif;
   line-height: 1.5;
 }
@@ -280,8 +283,8 @@
 }
 
 .send-button {
-  background: #FDE8EF;
-  border: 1px solid #E61C5D;
+  background: #fde8ef;
+  border: 1px solid #e61c5d;
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -302,8 +305,8 @@
 
 .send-button:disabled,
 .send-button[disabled] {
-  background: #E5E7EB;
-  border-color: #D1D5DB;
+  background: #e5e7eb;
+  border-color: #d1d5db;
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
@@ -334,7 +337,7 @@
 }
 
 .continue-button {
-  background-color: #AAA1F1;
+  background-color: #aaa1f1;
   color: #000000;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -345,7 +348,7 @@
 }
 
 .continue-button:hover {
-  background-color: #3B325B;
+  background-color: #3b325b;
   color: #fff;
 }
 
@@ -353,10 +356,10 @@
 .message-title {
   font-size: 20px;
   font-weight: 600;
-  color: #3B325B;
+  color: #3b325b;
   margin: 20px 0 16px 0;
   padding-left: 12px;
-  border-left: 3px solid #E61C5D;
+  border-left: 3px solid #e61c5d;
   line-height: 1.4;
 }
 
@@ -365,14 +368,14 @@
   position: relative;
   padding-left: 20px;
   line-height: 1.5;
-  color: #3B325B;
+  color: #3b325b;
 }
 
 .message-list-item::before {
-  content: "•";
+  content: '•';
   position: absolute;
   left: 0;
-  color: #E61C5D;
+  color: #e61c5d;
 }
 
 .message-signature {
@@ -383,7 +386,7 @@
 }
 
 .message-error {
-  color: #E61C5D;
+  color: #e61c5d;
   margin: 8px 0;
   font-style: italic;
 }
