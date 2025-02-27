@@ -1,10 +1,12 @@
 export default async function handler(req, res) {
-  console.log('API /viator-tours ejecutada con método:', req.method); // Verificar ejecución
+  console.log('API /viator-tours iniciada con método:', req.method); // Log inicial
   if (req.method !== 'POST') {
+    console.log('Método no permitido:', req.method);
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
+    console.log('Procesando solicitud POST...');
     const body = {
       filtering: {
         destination: '732',
