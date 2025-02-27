@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  console.log('API /viator-tours ejecutada con método:', req.method); // Log para verificar ejecución
+  console.log('API /viator-tours ejecutada con método:', req.method); // Verificar ejecución
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -51,13 +51,14 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
       throw new Error(
-        `Error HTTP: ${response.status} - ${response.statusText}`
+        `Error HTTP: ${response.status} - ${response.statusText} - ${errorText}`
       );
     }
 
     const data = await response.json();
-    console.log('Respuesta completa de Viator desde proxy:', data);
+    console.log('Respuesta completa de Viator:', data);
     res.status(200).json(data);
   } catch (error) {
     console.error('Error en proxy de Viator:', error);
