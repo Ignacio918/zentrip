@@ -8,19 +8,28 @@ const ToursSection = () => {
   useEffect(() => {
     const fetchTours = async () => {
       try {
-        const response = await fetch('https://api.viator.com/v1/search/products?destination=Paris&limit=5', {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_PROD}`, // Cambiado a producción
-            'Accept': 'application/json',
-          },
-        });
-        if (!response.ok) throw new Error('Respuesta no válida de la API');
+        const response = await fetch(
+          'https://api.viator.com/v1/search/products?destination=Paris&limit=5',
+          {
+            headers: {
+              Authorization: `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_PROD}`,
+              Accept: 'application/json',
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error(
+            `Error HTTP: ${response.status} - ${response.statusText}`
+          );
+        }
         const data = await response.json();
-        console.log('Datos de Viator:', data);
+        console.log('Respuesta completa de Viator:', data);
         setTours(data.data ? data.data.slice(0, 5) : []);
       } catch (error) {
-        console.error('Error fetching tours:', error);
-        setError('No se pudieron cargar los tours. Revisá la consola.');
+        console.error('Detalles del error fetching tours:', error);
+        setError(
+          `No se pudieron cargar los tours: ${error.message}. Revisá la consola.`
+        );
       } finally {
         setLoading(false);
       }
@@ -33,15 +42,26 @@ const ToursSection = () => {
 
   return (
     <section className="py-8">
-      <h2 className="text-2xl font-bold text-center mb-6">Explorá actividades increíbles</h2>
+      <h2 className="text-2xl font-bold text-center mb-6">
+        Explorá actividades increíbles
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
         {tours.length > 0 ? (
           tours.map((tour) => (
-            <div key={tour.productCode} className="border rounded-lg overflow-hidden shadow-lg">
-              <img src={tour.thumbnailUrl} alt={tour.title} className="w-full h-48 object-cover" />
+            <div
+              key={tour.productCode}
+              className="border rounded-lg overflow-hidden shadow-lg"
+            >
+              <img
+                src={tour.thumbnailUrl}
+                alt={tour.title}
+                className="w-full h-48 object-cover"
+              />
               <div className="p-4">
                 <h3 className="text-lg font-semibold">{tour.title}</h3>
-                <p className="text-gray-600">${tour.price?.formattedPrice || 'N/A'}</p>
+                <p className="text-gray-600">
+                  ${tour.price?.formattedPrice || 'N/A'}
+                </p>
                 <a
                   href={tour.webUrl}
                   target="_blank"
