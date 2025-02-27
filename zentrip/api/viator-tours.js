@@ -1,12 +1,12 @@
 export default async function handler(req, res) {
-  console.log('API /viator-tours iniciada con método:', req.method); // Log inicial
+  console.log('API /viator-tours iniciada con método:', req.method); // Verificar ejecución
   if (req.method !== 'POST') {
     console.log('Método no permitido:', req.method);
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    console.log('Procesando solicitud POST...');
+    console.log('Procesando solicitud POST con clave sandbox...');
     const body = {
       filtering: {
         destination: '732',
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.VITE_VIATOR_API_KEY_PROD}`,
+          Authorization: `Bearer ${process.env.VITE_VIATOR_API_KEY_SANDBOX}`, // Cambiado a sandbox
           Accept: 'application/json',
           'Content-Type': 'application/json',
           'Accept-Language': 'en',
@@ -60,10 +60,10 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    console.log('Respuesta completa de Viator:', data);
+    console.log('Respuesta completa de Viator con sandbox:', data);
     res.status(200).json(data);
   } catch (error) {
-    console.error('Error en proxy de Viator:', error);
+    console.error('Error en proxy de Viator con sandbox:', error);
     res.status(500).json({ error: error.message });
   }
 }

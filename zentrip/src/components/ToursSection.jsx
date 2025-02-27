@@ -11,7 +11,7 @@ const ToursSection = () => {
         const response = await fetch('/api/viator-tours', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_PROD}`,
+            Authorization: `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_SANDBOX}`, // Cambiado a sandbox
             Accept: 'application/json',
             'Content-Type': 'application/json',
           },
