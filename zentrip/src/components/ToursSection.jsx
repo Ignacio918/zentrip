@@ -9,11 +9,12 @@ const ToursSection = () => {
     const fetchTours = async () => {
       try {
         const response = await fetch(
-          'https://api.viator.com/v1/search/products?destination=Paris&limit=5',
+          'https://api.viator.com/partner/v2/products/search?destinationId=Paris&limit=5',
           {
             headers: {
               Authorization: `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_PROD}`,
               Accept: 'application/json',
+              'Accept-Language': 'en', // Añadido para localization, opcional
             },
           }
         );
@@ -24,6 +25,7 @@ const ToursSection = () => {
         }
         const data = await response.json();
         console.log('Respuesta completa de Viator:', data);
+        // Ajuste para la estructura de datos de v2, que usa "data" como raíz
         setTours(data.data ? data.data.slice(0, 5) : []);
       } catch (error) {
         console.error('Detalles del error fetching tours:', error);
