@@ -20,7 +20,6 @@
       "dest": "/api/$1"
     },
     {
-      "handle": "miss",
       "src": "/(.*)",
       "dest": "/index.html"
     }
