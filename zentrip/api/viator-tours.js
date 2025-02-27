@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  console.log('API /viator-tours iniciada con método:', req.method); // Verificar ejecución
+  console.log('API /viator-tours iniciada con método:', req.method);
   if (req.method !== 'POST') {
     console.log('Método no permitido:', req.method);
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -18,23 +18,11 @@ export default async function handler(req, res) {
         endDate: '2025-03-28',
         includeAutomaticTranslations: true,
         confirmationType: 'INSTANT',
-        durationInMinutes: {
-          from: 20,
-          to: 360,
-        },
-        rating: {
-          from: 3,
-          to: 5,
-        },
+        durationInMinutes: { from: 20, to: 360 },
+        rating: { from: 3, to: 5 },
       },
-      sorting: {
-        sort: 'TRAVELER_RATING',
-        order: 'DESCENDING',
-      },
-      pagination: {
-        start: 1,
-        count: 5,
-      },
+      sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
+      pagination: { start: 1, count: 5 },
       currency: 'USD',
     };
 
@@ -43,7 +31,7 @@ export default async function handler(req, res) {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.VITE_VIATOR_API_KEY_SANDBOX}`, // Cambiado a sandbox
+          Authorization: `Bearer ${process.env.VITE_VIATOR_API_KEY_SANDBOX}`,
           Accept: 'application/json',
           'Content-Type': 'application/json',
           'Accept-Language': 'en',
