@@ -9,7 +9,7 @@ export default defineConfig({
     svgr(),
     viteMockServe({
       mockPath: 'mock',
-      localEnabled: true, // Habilita mocks en desarrollo local
+      localEnabled: true,
     }),
   ],
   build: {
