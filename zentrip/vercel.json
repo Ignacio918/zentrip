@@ -22,12 +22,10 @@
       "methods": ["POST"]
     },
     {
-      "handle": "miss",
       "src": "/(.*)",
       "dest": "/dist/$1"
     },
     {
-      "handle": "miss",
       "src": "/(.*)",
       "dest": "/index.html"
     }
