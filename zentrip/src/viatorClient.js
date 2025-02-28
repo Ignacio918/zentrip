@@ -263,27 +263,21 @@ export const getDestinationProducts = async ({
     const searchRequest = {
       filtering: {
         ...(destinationId && { destination: destinationId.toString() }), // Solo incluir si hay destinationId
-        startDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0], // Fecha futura (mañana)
+        startDate: currentDate, // Usar fecha actual para probar
         endDate: thirtyDaysFromNow,
         includeAutomaticTranslations: true,
         ...(priceRange && {
           priceRange: { min: priceRange.min, max: priceRange.max },
-        }), // Filtro de precio
-        ...(duration && { duration }), // Filtro de duración (requiere formato específico de Viator)
-        ...(rating && { minimumRating: rating }), // Filtro de rating mínimo
+        }),
+        ...(duration && { duration }), // Ajustar formato si es necesario (ver documentación)
+        ...(rating && { minimumRating: rating }),
       },
-      sorting: {
-        sort: 'TRAVELER_RATING',
-        order: 'DESCENDING',
-      },
-      pagination: {
-        start: 1,
-        count: limit,
-      },
+      sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
+      pagination: { start: 1, count: limit },
       currency: 'USD',
     };
+
+    console.log('Solicitud enviada a Viator:', searchRequest);
 
     const response = await fetch('/viator/products/search', {
       method: 'POST',
@@ -295,18 +289,26 @@ export const getDestinationProducts = async ({
       body: JSON.stringify(searchRequest),
     });
 
-    if (!response.ok)
-      throw new Error(`Error fetching products: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Error HTTP: ${response.status} - ${errorText}`);
+      throw new Error(
+        `Error fetching products: ${response.status} - ${errorText}`
+      );
+    }
+
     const data = await response.json();
-    console.log('Respuesta de productos:', data);
+    console.log('Respuesta completa de Viator:', data);
 
     if (!data.products || data.products.length === 0) {
+      console.warn('No products found in response:', data);
       return [];
     }
 
     return data.products
       .map((product) => {
         if (!product.productCode || !product.title) {
+          console.warn('Producto inválido encontrado:', product);
           return null;
         }
         return {

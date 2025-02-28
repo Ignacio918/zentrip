@@ -13,6 +13,7 @@ const ToursSection = () => {
     duration: null,
     rating: null,
   });
+  const [reload, setReload] = useState(false); // Para forzar recarga
 
   // Lista de destinos populares para recomendaciones
   const popularDestinations = [
@@ -23,7 +24,6 @@ const ToursSection = () => {
     { id: 56662, name: 'Sydney' },
   ];
 
-  // Función con debounce para buscar destinos
   const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
@@ -51,6 +51,7 @@ const ToursSection = () => {
   // Cargar tours recomendados al inicio
   useEffect(() => {
     const fetchRecommendedTours = async () => {
+      setLoading(true);
       try {
         const recommendations = await Promise.all(
           popularDestinations.map(async (dest) => {
@@ -59,18 +60,20 @@ const ToursSection = () => {
               destinationName: dest.name,
               limit: 1,
             });
-            return products[0]; // Tomar el primer tour de cada destino
+            return products[0];
           })
         );
         setRecommendedTours(recommendations.filter(Boolean));
       } catch (error) {
         console.error('Error fetching recommended tours:', error);
+        setError('Error al cargar tours recomendados.');
+      } finally {
+        setLoading(false);
       }
     };
     fetchRecommendedTours();
-  }, []);
+  }, [reload]);
 
-  // Cargar tours según búsqueda o filtros
   const fetchTours = async (
     destinationId = null,
     destinationName = 'Global'
@@ -84,33 +87,33 @@ const ToursSection = () => {
         duration: filters.duration,
         rating: filters.rating,
       });
+      console.log('Tours fetched:', products); // Depuración
       setTours(products);
     } catch (error) {
       console.error('Error fetching tours:', error);
-      setError(
-        `No se pudieron cargar los tours: ${error.message}. Revisá la consola.`
-      );
+      setError(`No se pudieron cargar los tours: ${error.message}.`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Actualizar búsqueda
   useEffect(() => {
     fetchDestinations(searchTerm);
   }, [searchTerm, fetchDestinations]);
 
-  // Manejar selección de destino
   const handleDestinationSelect = (dest) => {
     setSearchTerm(dest.name);
     setDestinations([]);
     fetchTours(dest.destinationId, dest.name);
   };
 
-  // Manejar filtros
   const handleFilterChange = (filterType, value) => {
     setFilters((prev) => ({ ...prev, [filterType]: value }));
-    fetchTours(); // Aplicar filtros inmediatamente (puedes ajustar esto)
+    fetchTours();
+  };
+
+  const handleReload = () => {
+    setReload((prev) => !prev); // Forzar recarga
   };
 
   if (loading) return <p className="text-center">Cargando tours...</p>;
@@ -122,8 +125,7 @@ const ToursSection = () => {
         Explorá actividades increíbles
       </h2>
 
-      {/* Buscador */}
-      <div className="mb-6 px-4">
+      <div className="mb-6 px-4 relative">
         <input
           type="text"
           value={searchTerm}
@@ -132,7 +134,7 @@ const ToursSection = () => {
           className="w-full p-2 border rounded"
         />
         {destinations.length > 0 && (
-          <ul className="absolute bg-white border rounded mt-1 max-h-40 overflow-y-auto w-full">
+          <ul className="absolute bg-white border rounded mt-1 max-h-40 overflow-y-auto w-full z-10">
             {destinations.map((dest) => (
               <li
                 key={dest.destinationId}
@@ -146,7 +148,6 @@ const ToursSection = () => {
         )}
       </div>
 
-      {/* Filtros */}
       <div className="mb-6 px-4 flex flex-wrap gap-4">
         <div>
           <label>Precio:</label>
@@ -172,9 +173,9 @@ const ToursSection = () => {
             className="ml-2 p-1 border rounded"
           >
             <option value="">Todas</option>
-            <option value="1-4">1-4 horas</option>
-            <option value="4-8">4-8 horas</option>
-            <option value="8+">8+ horas</option>
+            <option value="PT1H-PT4H">1-4 horas</option>
+            <option value="PT4H-PT8H">4-8 horas</option>
+            <option value="PT8H">8+ horas</option>
           </select>
         </div>
         <div>
@@ -190,9 +191,14 @@ const ToursSection = () => {
             <option value="4.5">4.5+</option>
           </select>
         </div>
+        <button
+          onClick={handleReload}
+          className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600"
+        >
+          Recargar
+        </button>
       </div>
 
-      {/* Tours Recomendados */}
       {recommendedTours.length > 0 && !searchTerm && (
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-center mb-4">
@@ -227,7 +233,6 @@ const ToursSection = () => {
         </div>
       )}
 
-      {/* Tours Principales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
         {tours.length > 0 ? (
           tours.map((tour) => (
