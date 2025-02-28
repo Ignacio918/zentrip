@@ -13,13 +13,6 @@
   ],
   "routes": [
     {
-      "src": "/viator/(.*)",
-      "dest": "https://api.viator.com/partner/$1",
-      "headers": {
-        "Accept": "application/json;version=2.0"
-      }
-    },
-    {
       "src": "/(.*)",
       "dest": "/dist/$1"
     },
