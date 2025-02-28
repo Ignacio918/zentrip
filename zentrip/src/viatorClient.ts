@@ -194,7 +194,7 @@ export const searchDestinations = async (
     }
 
     const destinations = data.destinations;
-    const destinationIds = destinations.map((dest) => dest.destinationId);
+    const destinationIds = destinations.map((dest: { destinationId: any; }) => dest.destinationId);
 
     const locationsResponse = await fetch('/viator/locationsBulk', {
       method: 'POST',
@@ -215,7 +215,7 @@ export const searchDestinations = async (
       ])
     );
 
-    const destinationsWithDetails = destinations.map((destination) => {
+    const destinationsWithDetails = destinations.map((destination: { destinationId: unknown; }) => {
       let locationDetails: LocationDetails;
       if (locationsMap.has(destination.destinationId)) {
         const mapValue = locationsMap.get(destination.destinationId);
@@ -321,7 +321,7 @@ export const getDestinationProducts = async (
           ),
         };
       })
-      .filter((product): product is Product => product !== null);
+      .filter((product: Product | null): product is Product => product !== null);
   } catch (error) {
     console.error('Error getting destination products:', error);
     return [];
