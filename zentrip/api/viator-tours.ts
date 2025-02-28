@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const apiKey = process.env.VITE_VIATOR_API_KEY_PROD;
     console.log('Procesando solicitud con API Key:', apiKey);
 
-    const url = req.url ?? '/products/search'; // Manejar caso undefined
+    const url = req.url?.replace('/viator', '') ?? '/products/search'; // Manejar caso undefined
     const response = await fetch(`https://api.viator.com/partner${url}`, {
       method: req.method,
       headers: new Headers({

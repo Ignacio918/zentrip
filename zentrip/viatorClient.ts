@@ -1,14 +1,12 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
 const viatorApi = axios.create({
-  baseURL: '/viator', // Usa el proxy definido en vite.config.ts
+  baseURL: '/viator',
   headers: {
     Accept: 'application/json;version=2.0',
     'Content-Type': 'application/json',
     'Accept-Language': 'es-ES',
-  },
-  params: {
-    'exp-api-key': import.meta.env.VITE_VIATOR_API_KEY_PROD, // Usamos PROD
+    'exp-api-key': import.meta.env.VITE_VIATOR_API_KEY_PROD,
   },
 });
 
@@ -18,7 +16,6 @@ viatorApi.interceptors.request.use((request) => {
     url: request.url,
     method: request.method,
     headers: request.headers,
-    params: request.params,
     data: request.data,
   });
   return request;
@@ -29,7 +26,6 @@ viatorApi.interceptors.response.use(
     console.log('Response:', {
       status: response.status,
       data: response.data,
-      headers: response.headers,
     });
     return response;
   },
@@ -38,7 +34,6 @@ viatorApi.interceptors.response.use(
       message: error.message,
       status: error.response?.status,
       data: error.response?.data,
-      headers: error.response?.headers,
       config: {
         url: error.config?.url,
         method: error.config?.method,
@@ -48,8 +43,8 @@ viatorApi.interceptors.response.use(
   }
 );
 
-// Interfaces desde el backup
-interface LocationDetails {
+// Interfaz para las ubicaciones devueltas por /locationsBulk
+export interface LocationDetails {
   locationId: number;
   city?: string;
   country?: string;
@@ -57,7 +52,8 @@ interface LocationDetails {
   addressLine2?: string;
 }
 
-interface Destination {
+// Interfaz para los destinos devueltos por /destinations/search
+export interface Destination {
   destinationId: number;
   name: string;
   type: string;
@@ -113,6 +109,25 @@ export interface Product {
   duration: string;
   location: string;
   productUrl: string;
+}
+
+export interface ProductSearchRequest {
+  filtering: {
+    destination: string;
+    tags?: number[];
+    startDate?: string;
+    endDate?: string;
+    includeAutomaticTranslations?: boolean;
+  };
+  sorting: {
+    sort: 'PRICE' | 'TRAVELER_RATING' | 'TOP_SELLERS';
+    order: 'ASCENDING' | 'DESCENDING';
+  };
+  pagination: {
+    start: number;
+    count: number;
+  };
+  currency: string;
 }
 
 interface ProductApiResponse {
@@ -304,7 +319,7 @@ export const getDestinationProducts = async (
           ),
         };
       })
-      .filter((product): product is Product => product !== null);
+      .filter((product) => product !== null) as Product[];
   } catch (error) {
     console.error('Error getting destination products:', error);
     return [];
