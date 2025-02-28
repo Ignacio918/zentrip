@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
-import { viteMockServe } from 'vite-plugin-mock'; // Asegurar importación correcta
+import { viteMockServe } from 'vite-plugin-mock';
 
 export default defineConfig({
   plugins: [
