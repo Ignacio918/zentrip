@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getDestinationProducts } from '../../viatorClient'; // Ajusta la ruta según la ubicación de viatorClient.js
 
 const ToursSection = () => {
   const [tours, setTours] = useState([]);
@@ -8,22 +9,15 @@ const ToursSection = () => {
   useEffect(() => {
     const fetchTours = async () => {
       try {
-        const response = await fetch('/api/viator-tours', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_SANDBOX}`,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) {
-          throw new Error(
-            `Error HTTP: ${response.status} - ${response.statusText}`
-          );
-        }
-        const data = await response.json();
-        console.log('Respuesta completa de Viator:', data);
-        setTours(data.products ? data.products.slice(0, 5) : []);
+        // Usamos un destinationId fijo para probar (732 es París según el backup)
+        const destinationId = 732;
+        const destinationName = 'Paris'; // Nombre de ejemplo
+        const products = await getDestinationProducts(
+          destinationId,
+          destinationName
+        );
+        console.log('Productos obtenidos:', products);
+        setTours(products);
       } catch (error) {
         console.error('Detalles del error fetching tours:', error);
         setError(
@@ -52,17 +46,17 @@ const ToursSection = () => {
               className="border rounded-lg overflow-hidden shadow-lg"
             >
               <img
-                src={tour.thumbnailUrl}
+                src={tour.photoUrl || 'https://via.placeholder.com/150'}
                 alt={tour.title}
                 className="w-full h-48 object-cover"
               />
               <div className="p-4">
                 <h3 className="text-lg font-semibold">{tour.title}</h3>
                 <p className="text-gray-600">
-                  ${tour.price?.formattedPrice || 'N/A'}
+                  ${tour.price.formattedPrice || `$${tour.price.amount}`}
                 </p>
                 <a
-                  href={tour.webUrl}
+                  href={tour.productUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"

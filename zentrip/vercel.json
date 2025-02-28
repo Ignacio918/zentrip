@@ -6,10 +6,6 @@
       "use": "@vercel/static"
     },
     {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
@@ -17,8 +13,8 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "src": "/viator/(.*)",
+      "dest": "https://api.viator.com/partner/$1"
     },
     {
       "src": "/(.*)",
