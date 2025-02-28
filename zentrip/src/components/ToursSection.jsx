@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getDestinationProducts } from './viatorClient';
+import { getDestinationProducts } from './viatorClient'; // Importación correcta sin .ts
 
 const ToursSection = () => {
   const [tours, setTours] = useState([]);
@@ -12,17 +12,12 @@ const ToursSection = () => {
         // Usamos un destinationId fijo para probar (732 es París según el backup)
         const destinationId = 732;
         const destinationName = 'Paris'; // Nombre de ejemplo
-        const products = await getDestinationProducts(
-          destinationId,
-          destinationName
-        );
+        const products = await getDestinationProducts(destinationId, destinationName);
         console.log('Productos obtenidos:', products);
         setTours(products);
       } catch (error) {
         console.error('Detalles del error fetching tours:', error);
-        setError(
-          `No se pudieron cargar los tours: ${error.message}. Revisá la consola.`
-        );
+        setError(`No se pudieron cargar los tours: ${error.message}. Revisá la consola.`);
       } finally {
         setLoading(false);
       }
@@ -35,16 +30,11 @@ const ToursSection = () => {
 
   return (
     <section className="py-8">
-      <h2 className="text-2xl font-bold text-center mb-6">
-        Explorá actividades increíble
-      </h2>
+      <h2 className="text-2xl font-bold text-center mb-6">Explorá actividades increíble</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
         {tours.length > 0 ? (
           tours.map((tour) => (
-            <div
-              key={tour.productCode}
-              className="border rounded-lg overflow-hidden shadow-lg"
-            >
+            <div key={tour.productCode} className="border rounded-lg overflow-hidden shadow-lg">
               <img
                 src={tour.photoUrl || 'https://via.placeholder.com/150'}
                 alt={tour.title}
@@ -52,9 +42,7 @@ const ToursSection = () => {
               />
               <div className="p-4">
                 <h3 className="text-lg font-semibold">{tour.title}</h3>
-                <p className="text-gray-600">
-                  ${tour.price.formattedPrice || `$${tour.price.amount}`}
-                </p>
+                <p className="text-gray-600">${tour.price.formattedPrice || `$${tour.price.amount}`}</p>
                 <a
                   href={tour.productUrl}
                   target="_blank"
