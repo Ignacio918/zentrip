@@ -22,11 +22,11 @@
       "methods": ["POST"]
     },
     {
-      "src": "^/(?!viator/).*$",
+      "src": "/(.*)",
       "dest": "/dist/$1"
     },
     {
-      "src": "^/(?!viator/).*$",
+      "src": "/(.*)",
       "dest": "/index.html"
     }
   ]

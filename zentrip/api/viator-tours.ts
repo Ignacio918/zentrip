@@ -1,7 +1,10 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  console.log('API /viator-tours iniciada con método:', req.method);
+  console.log('API /viator-tours invocada - Método:', req.method);
+  console.log('URL recibida:', req.url);
+  console.log('Body recibido:', req.body);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -9,6 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const apiKey = process.env.VITE_VIATOR_API_KEY_PROD;
     if (!apiKey) {
+      console.error('API key no encontrada en variables de entorno');
       return res
         .status(500)
         .json({ error: 'API key not configured in environment variables' });
@@ -31,6 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Error en la respuesta de Viator:', errorText);
       throw new Error(
         `Error HTTP: ${response.status} - ${response.statusText} - ${errorText}`
       );
