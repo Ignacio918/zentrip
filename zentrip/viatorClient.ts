@@ -1,11 +1,13 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
 const viatorApi = axios.create({
-  baseURL: 'https://api.viator.com/partner', // Endpoint directo de Viator
+  baseURL: '/viator', // Usa el proxy serverless en Vercel
   headers: {
     Accept: 'application/json;version=2.0',
     'Content-Type': 'application/json',
     'Accept-Language': 'es-ES',
+  },
+  params: {
     'exp-api-key': import.meta.env.VITE_VIATOR_API_KEY_PROD, // Usamos PROD
   },
 });
@@ -16,6 +18,7 @@ viatorApi.interceptors.request.use((request) => {
     url: request.url,
     method: request.method,
     headers: request.headers,
+    params: request.params,
     data: request.data,
   });
   return request;
