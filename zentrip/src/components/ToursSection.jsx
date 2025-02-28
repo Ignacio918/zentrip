@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getDestinationProducts, searchDestinations } from '../viatorClient.js';
+import {
+  getDestinationProducts,
+  searchDestinations,
+  getTopToursFromDestinations,
+} from '../viatorClient.js';
 
 const ToursSection = () => {
   const [tours, setTours] = useState([]);
@@ -13,15 +17,19 @@ const ToursSection = () => {
     duration: null,
     rating: null,
   });
+  const [visibleTours, setVisibleTours] = useState(8); // Limitar a 8 tours inicialmente
   const [reload, setReload] = useState(false);
 
-  // Lista de destinos populares para recomendaciones
-  const popularDestinations = [
-    { id: 732, name: 'Paris' },
-    { id: 60763, name: 'New York' },
-    { id: 287437, name: 'Tokyo' },
-    { id: 2579, name: 'Rome' },
-    { id: 56662, name: 'Sydney' },
+  // Lista de 8 destinos variados para variedad global
+  const diverseDestinations = [
+    { id: 732, name: 'Paris' }, // Francia
+    { id: 60763, name: 'New York' }, // EE.UU.
+    { id: 287437, name: 'Tokyo' }, // Japón
+    { id: 2579, name: 'Rome' }, // Italia
+    { id: 56662, name: 'Sydney' }, // Australia
+    { id: 1291, name: 'London' }, // Reino Unido
+    { id: 29303, name: 'Rio de Janeiro' }, // Brasil
+    { id: 510, name: 'Cape Town' }, // Sudáfrica
   ];
 
   const debounce = (func, delay) => {
@@ -48,22 +56,16 @@ const ToursSection = () => {
     []
   );
 
-  // Cargar tours recomendados al inicio
+  // Cargar tours recomendados desde destinos variados
   useEffect(() => {
     const fetchRecommendedTours = async () => {
       setLoading(true);
       try {
-        const recommendations = await Promise.all(
-          popularDestinations.map(async (dest) => {
-            const products = await getDestinationProducts({
-              destinationId: dest.id,
-              destinationName: dest.name,
-              limit: 5,
-            });
-            return products.length > 0 ? products : null; // Asegurar que devuelva algo si hay datos
-          })
-        );
-        setRecommendedTours(recommendations.flat().filter(Boolean));
+        const topTours = await getTopToursFromDestinations(
+          diverseDestinations,
+          1
+        ); // 1 tour por destino
+        setRecommendedTours(topTours);
       } catch (error) {
         console.error('Error fetching recommended tours:', error);
         setError('Error al cargar tours recomendados.');
@@ -74,17 +76,16 @@ const ToursSection = () => {
     fetchRecommendedTours();
   }, [reload]);
 
-  // Cargar tours según búsqueda o filtros
+  // Cargar tours iniciales desde destinos variados
   useEffect(() => {
     const fetchInitialTours = async () => {
       setLoading(true);
       try {
-        const products = await getDestinationProducts({
-          destinationId: 732,
-          destinationName: 'Paris',
-        }); // Carga inicial con París
-        console.log('Tours iniciales cargados:', products);
-        setTours(products);
+        const topTours = await getTopToursFromDestinations(
+          diverseDestinations,
+          2
+        ); // 2 tours por destino
+        setTours(topTours);
       } catch (error) {
         console.error('Error fetching initial tours:', error);
         setError('Error al cargar tours iniciales.');
@@ -95,6 +96,7 @@ const ToursSection = () => {
     fetchInitialTours();
   }, []);
 
+  // Cargar tours según búsqueda o filtros
   useEffect(() => {
     const fetchSearchedTours = async () => {
       if (!searchTerm) return;
@@ -109,9 +111,10 @@ const ToursSection = () => {
           priceRange: filters.priceRange,
           duration: filters.duration,
           rating: filters.rating,
+          limit: 50,
         });
-        console.log('Tours buscados cargados:', products);
         setTours(products);
+        setVisibleTours(8); // Resetear a 8 al buscar
       } catch (error) {
         console.error('Error fetching searched tours:', error);
         setError('Error al cargar tours buscados.');
@@ -125,11 +128,14 @@ const ToursSection = () => {
   const handleDestinationSelect = (dest) => {
     setSearchTerm(dest.name);
     setDestinations([]);
-    fetchSearchedTours(); // Llamar directamente a la función
   };
 
   const handleFilterChange = (filterType, value) => {
     setFilters((prev) => ({ ...prev, [filterType]: value }));
+  };
+
+  const handleLoadMore = () => {
+    setVisibleTours((prev) => Math.min(prev + 8, tours.length)); // Cargar 8 más, sin superar el total
   };
 
   const handleReload = () => {
@@ -255,30 +261,40 @@ const ToursSection = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
         {tours.length > 0 ? (
-          tours.map((tour) => (
-            <div
-              key={tour.productCode}
-              className="border rounded-lg overflow-hidden shadow-lg"
-            >
-              <img
-                src={tour.photoUrl || 'https://via.placeholder.com/150'}
-                alt={tour.title}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <h3 className="text-lg font-semibold">{tour.title}</h3>
-                <p className="text-gray-600">${tour.price.amount}</p>
-                <a
-                  href={tour.productUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-                >
-                  Ver más
-                </a>
+          <>
+            {tours.slice(0, visibleTours).map((tour) => (
+              <div
+                key={tour.productCode}
+                className="border rounded-lg overflow-hidden shadow-lg"
+              >
+                <img
+                  src={tour.photoUrl || 'https://via.placeholder.com/150'}
+                  alt={tour.title}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold">{tour.title}</h3>
+                  <p className="text-gray-600">${tour.price.amount}</p>
+                  <a
+                    href={tour.productUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                  >
+                    Ver más
+                  </a>
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+            {visibleTours < tours.length && (
+              <button
+                onClick={handleLoadMore}
+                className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+              >
+                Ver más
+              </button>
+            )}
+          </>
         ) : (
           <p className="text-center">No hay tours disponibles.</p>
         )}

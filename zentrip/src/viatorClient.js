@@ -245,6 +245,37 @@ export const searchDestinations = async (searchTerm) => {
   }
 };
 
+// Obtener los mejores tours de una lista de destinos
+export const getTopToursFromDestinations = async (
+  destinations = [],
+  limitPerDestination = 1
+) => {
+  try {
+    const allTours = await Promise.all(
+      destinations.map(async (dest) => {
+        const products = await getDestinationProducts({
+          destinationId: dest.id,
+          destinationName: dest.name,
+          limit: limitPerDestination,
+        });
+        return products.map((product) => ({
+          ...product,
+          destinationId: dest.id,
+          destinationName: dest.name,
+        }));
+      })
+    );
+    // Combinar todos los tours y ordenar por rating
+    const flattenedTours = allTours.flat().filter(Boolean);
+    return flattenedTours
+      .sort((a, b) => b.rating - a.rating) // Ordenar por rating descendente
+      .slice(0, 8); // Limitar a 8 tours
+  } catch (error) {
+    console.error('Error getting top tours from destinations:', error);
+    return [];
+  }
+};
+
 // Obtener productos de destinos con soporte para filtros y globalidad
 export const getDestinationProducts = async ({
   destinationId = 732, // Valor por defecto para pruebas (París)
@@ -262,14 +293,14 @@ export const getDestinationProducts = async ({
 
     const searchRequest = {
       filtering: {
-        ...(destinationId && { destination: destinationId.toString() }), // Asegurar un destinationId por defecto
+        ...(destinationId && { destination: destinationId.toString() }),
         startDate: currentDate,
         endDate: thirtyDaysFromNow,
         includeAutomaticTranslations: true,
         ...(priceRange && {
           priceRange: { min: priceRange.min, max: priceRange.max },
         }),
-        ...(duration && { duration }), // Ajustar formato si es necesario (ver documentación)
+        ...(duration && { duration }),
         ...(rating && { minimumRating: rating }),
       },
       sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
@@ -348,4 +379,5 @@ export default {
   getDestinations,
   searchDestinations,
   getDestinationProducts,
+  getTopToursFromDestinations,
 };
