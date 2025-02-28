@@ -13,7 +13,7 @@ const ToursSection = () => {
     duration: null,
     rating: null,
   });
-  const [reload, setReload] = useState(false); // Para forzar recarga
+  const [reload, setReload] = useState(false);
 
   // Lista de destinos populares para recomendaciones
   const popularDestinations = [
@@ -58,12 +58,12 @@ const ToursSection = () => {
             const products = await getDestinationProducts({
               destinationId: dest.id,
               destinationName: dest.name,
-              limit: 1,
+              limit: 5,
             });
-            return products[0];
+            return products.length > 0 ? products : null; // Asegurar que devuelva algo si hay datos
           })
         );
-        setRecommendedTours(recommendations.filter(Boolean));
+        setRecommendedTours(recommendations.flat().filter(Boolean));
       } catch (error) {
         console.error('Error fetching recommended tours:', error);
         setError('Error al cargar tours recomendados.');
@@ -74,46 +74,66 @@ const ToursSection = () => {
     fetchRecommendedTours();
   }, [reload]);
 
-  const fetchTours = async (
-    destinationId = null,
-    destinationName = 'Global'
-  ) => {
-    setLoading(true);
-    try {
-      const products = await getDestinationProducts({
-        destinationId,
-        destinationName,
-        priceRange: filters.priceRange,
-        duration: filters.duration,
-        rating: filters.rating,
-      });
-      console.log('Tours fetched:', products); // Depuración
-      setTours(products);
-    } catch (error) {
-      console.error('Error fetching tours:', error);
-      setError(`No se pudieron cargar los tours: ${error.message}.`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Cargar tours según búsqueda o filtros
+  useEffect(() => {
+    const fetchInitialTours = async () => {
+      setLoading(true);
+      try {
+        const products = await getDestinationProducts({
+          destinationId: 732,
+          destinationName: 'Paris',
+        }); // Carga inicial con París
+        console.log('Tours iniciales cargados:', products);
+        setTours(products);
+      } catch (error) {
+        console.error('Error fetching initial tours:', error);
+        setError('Error al cargar tours iniciales.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInitialTours();
+  }, []);
 
   useEffect(() => {
-    fetchDestinations(searchTerm);
-  }, [searchTerm, fetchDestinations]);
+    const fetchSearchedTours = async () => {
+      if (!searchTerm) return;
+      setLoading(true);
+      try {
+        const selectedDest = destinations.find(
+          (dest) => dest.name.toLowerCase() === searchTerm.toLowerCase()
+        );
+        const products = await getDestinationProducts({
+          destinationId: selectedDest?.destinationId || 732,
+          destinationName: selectedDest?.name || 'Paris',
+          priceRange: filters.priceRange,
+          duration: filters.duration,
+          rating: filters.rating,
+        });
+        console.log('Tours buscados cargados:', products);
+        setTours(products);
+      } catch (error) {
+        console.error('Error fetching searched tours:', error);
+        setError('Error al cargar tours buscados.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSearchedTours();
+  }, [searchTerm, filters, destinations]);
 
   const handleDestinationSelect = (dest) => {
     setSearchTerm(dest.name);
     setDestinations([]);
-    fetchTours(dest.destinationId, dest.name);
+    fetchSearchedTours(); // Llamar directamente a la función
   };
 
   const handleFilterChange = (filterType, value) => {
     setFilters((prev) => ({ ...prev, [filterType]: value }));
-    fetchTours();
   };
 
   const handleReload = () => {
-    setReload((prev) => !prev); // Forzar recarga
+    setReload((prev) => !prev);
   };
 
   if (loading) return <p className="text-center">Cargando tours...</p>;

@@ -247,12 +247,12 @@ export const searchDestinations = async (searchTerm) => {
 
 // Obtener productos de destinos con soporte para filtros y globalidad
 export const getDestinationProducts = async ({
-  destinationId = null,
+  destinationId = 732, // Valor por defecto para pruebas (París)
   destinationName = 'Global',
   priceRange = null,
   duration = null,
   rating = null,
-  limit = 20,
+  limit = 50, // Aumentar límite para obtener más resultados
 } = {}) => {
   try {
     const currentDate = new Date().toISOString().split('T')[0];
@@ -262,8 +262,8 @@ export const getDestinationProducts = async ({
 
     const searchRequest = {
       filtering: {
-        ...(destinationId && { destination: destinationId.toString() }), // Solo incluir si hay destinationId
-        startDate: currentDate, // Usar fecha actual para probar
+        ...(destinationId && { destination: destinationId.toString() }), // Asegurar un destinationId por defecto
+        startDate: currentDate,
         endDate: thirtyDaysFromNow,
         includeAutomaticTranslations: true,
         ...(priceRange && {
