@@ -5,20 +5,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = req.body;
-    console.log('Procesando solicitud POST con cuerpo:', body);
+    const apiKey =
+      req.query['exp-api-key'] || process.env.VITE_VIATOR_API_KEY_SANDBOX;
+    console.log('Procesando solicitud con API Key:', apiKey);
 
     const response = await fetch(
       'https://api.viator.com/partner/products/search',
       {
-        method: 'POST',
+        method: 'GET', // Cambiado a GET para afiliados básicos (según el ejemplo implícito)
         headers: {
           Accept: 'application/json;version=2.0',
-          'Content-Type': 'application/json',
           'Accept-Language': 'es-ES',
-          Authorization: `Bearer ${process.env.VITE_VIATOR_API_KEY_SANDBOX}`,
+          'exp-api-key': apiKey,
         },
-        body: JSON.stringify(body),
       }
     );
 
