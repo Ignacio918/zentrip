@@ -1,13 +1,11 @@
 import axios from 'axios';
 
 const viatorApi = axios.create({
-  baseURL: '/api/viator-tours', // Proxy en Vercel
+  baseURL: '/viator', // Alineado con el backup que usa proxy
   headers: {
     Accept: 'application/json;version=2.0',
+    'Content-Type': 'application/json',
     'Accept-Language': 'es-ES',
-  },
-  params: {
-    'exp-api-key': import.meta.env.VITE_VIATOR_API_KEY_SANDBOX, // Parámetro de consulta
   },
 });
 
@@ -17,7 +15,7 @@ viatorApi.interceptors.request.use((request) => {
     url: request.url,
     method: request.method,
     headers: request.headers,
-    params: request.params,
+    data: request.data,
   });
   return request;
 });
@@ -144,13 +142,34 @@ export const getDestinationProducts = async (
   destinationName
 ) => {
   try {
-    const response = await viatorApi.get(''); // Vacío porque baseURL incluye el endpoint
+    const currentDate = new Date().toISOString().split('T')[0];
+    const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
+    const searchRequest = {
+      filtering: {
+        destination: destinationId.toString(),
+        startDate: currentDate,
+        endDate: thirtyDaysFromNow,
+        includeAutomaticTranslations: true,
+      },
+      sorting: {
+        sort: 'TRAVELER_RATING',
+        order: 'DESCENDING',
+      },
+      pagination: {
+        start: 1,
+        count: 20,
+      },
+      currency: 'USD',
+    };
+    const response = await viatorApi.post('/products/search', searchRequest);
 
-    if (!response.data.productos || response.data.productos.length === 0) {
+    if (!response.data.products || response.data.products.length === 0) {
       return [];
     }
 
-    return response.data.productos
+    return response.data.products
       .map((product) => {
         if (!product.productCode || !product.title) {
           return null;
@@ -158,27 +177,27 @@ export const getDestinationProducts = async (
         return {
           productCode: product.productCode,
           title: product.title,
-          description: product.description || '',
+          description: product.shortDescription || product.description || '',
           price: {
-            amount: product.precios?.resumen?.desdePrecio || 0,
-            currency: product.precios?.moneda || 'USD',
+            amount: product.pricing?.summary?.fromPrice || 0,
+            currency: product.pricing?.summary?.currencyCode || 'USD',
           },
-          rating: product.reseñas?.calificaciónPromedioCombinada || 0,
-          reviewCount: product.reseñas?.reseñasTotales || 0,
+          rating: product.reviews?.combinedAverageRating || 0,
+          reviewCount: product.reviews?.totalReviews || 0,
           photoUrl:
-            product.images?.[0]?.variants?.find((v) => v.alto === 400)?.url ||
+            product.images?.[0]?.variants?.find((v) => v.height === 400)?.url ||
             product.images?.[0]?.variants?.[0]?.url ||
             '',
-          duration: '', // No está en el ejemplo, podrías inferirlo si está disponible
-          location: product.destinos?.[0]?.ref || '',
-          productUrl:
-            product.productUrl ||
-            generateProductUrl(
-              product.productCode,
-              product.title,
-              destinationName,
-              destinationId
-            ),
+          duration: product.duration?.description || '',
+          location: [product.location?.city, product.location?.country]
+            .filter(Boolean)
+            .join(', '),
+          productUrl: generateProductUrl(
+            product.productCode,
+            product.title,
+            destinationName,
+            destinationId
+          ),
         };
       })
       .filter((product) => product !== null);
