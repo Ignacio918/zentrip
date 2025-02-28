@@ -17,10 +17,6 @@
       "dest": "/api/viator-tours.js"
     },
     {
-      "src": "/viator/test",
-      "dest": "/api/test.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "/dist/$1",
       "continue": true
