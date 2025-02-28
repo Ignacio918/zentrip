@@ -1,52 +1,10 @@
-import axios, { AxiosResponse, AxiosError } from 'axios';
-
-const viatorApi = axios.create({
-  baseURL: '/viator', // Usa el proxy serverless en Vercel
-  headers: {
-    Accept: 'application/json;version=2.0',
-    'Content-Type': 'application/json',
-    'Accept-Language': 'es-ES',
-  },
-});
-
-// Interceptor para debugging
-viatorApi.interceptors.request.use((request) => {
-  console.log('Starting Request:', {
-    url: request.url,
-    method: request.method,
-    headers: request.headers,
-    data: request.data,
-  });
-  return request;
-});
-
-viatorApi.interceptors.response.use(
-  (response: AxiosResponse) => {
-    console.log('Response:', {
-      status: response.status,
-      data: response.data,
-    });
-    return response;
-  },
-  (error: AxiosError) => {
-    console.error('API Error:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-      config: {
-        url: error.config?.url,
-        method: error.config?.method,
-      },
-    });
-    return Promise.reject(error);
-  }
-);
+import { useEffect, useState } from 'react';
 
 // Interfaz para las ubicaciones devueltas por /locationsBulk
 export interface LocationDetails {
   locationId: number;
-  city?: string;
-  country?: string;
+  city?: string; // Confirmamos que es opcional
+  country?: string; // Confirmamos que es opcional
   addressLine1?: string;
   addressLine2?: string;
 }
@@ -190,10 +148,17 @@ const generateProductUrl = (
 
 export const getDestinations = async (): Promise<Destination[]> => {
   try {
-    const response = await viatorApi.get<{ destinations: Destination[] }>(
-      '/destinations'
-    );
-    return response.data.destinations || [];
+    const response = await fetch('/viator/destinations', {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json;version=2.0',
+        'Accept-Language': 'es-ES',
+      },
+    });
+    if (!response.ok)
+      throw new Error(`Error fetching destinations: ${response.status}`);
+    const data = await response.json();
+    return data.destinations || [];
   } catch (error) {
     console.error('Error getting destinations:', error);
     throw error;
@@ -204,43 +169,71 @@ export const searchDestinations = async (
   searchTerm: string
 ): Promise<Destination[]> => {
   try {
-    const response = await viatorApi.get<{ destinations: Destination[] }>(
-      '/destinations/search',
-      {
-        params: {
-          searchTerm,
-          includeDetails: true,
-          language: 'es-ES',
-        },
-      }
-    );
+    const url = new URL('/viator/destinations/search', window.location.origin);
+    const params = new URLSearchParams({
+      searchTerm,
+      includeDetails: 'true',
+      language: 'es-ES',
+    });
+    url.search = params.toString();
 
-    console.log('API Response:', response.data);
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json;version=2.0',
+        'Accept-Language': 'es-ES',
+      },
+    });
+    if (!response.ok)
+      throw new Error(`Error searching destinations: ${response.status}`);
+    const data = await response.json();
+    console.log('API Response:', data);
 
-    if (!response.data.destinations) {
+    if (!data.destinations) {
       throw new Error('No destinations found in the response');
     }
 
-    const destinations = response.data.destinations;
+    const destinations = data.destinations;
     const destinationIds = destinations.map((dest) => dest.destinationId);
 
-    const locationsResponse = await viatorApi.post<{
-      locations: LocationDetails[];
-    }>('/locationsBulk', {
-      locationIds: destinationIds,
+    const locationsResponse = await fetch('/viator/locationsBulk', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json;version=2.0',
+      },
+      body: JSON.stringify({ locationIds: destinationIds }),
     });
+    if (!locationsResponse.ok)
+      throw new Error(`Error fetching locations: ${locationsResponse.status}`);
+    const locationsData = await locationsResponse.json();
 
     const locationsMap = new Map(
-      locationsResponse.data.locations.map((loc) => [loc.locationId, loc])
+      locationsData.locations.map((loc: LocationDetails) => [
+        loc.locationId,
+        loc,
+      ])
     );
 
     const destinationsWithDetails = destinations.map((destination) => {
-      const locationDetails = locationsMap.get(destination.destinationId);
+      let locationDetails: LocationDetails;
+      if (locationsMap.has(destination.destinationId)) {
+        const mapValue = locationsMap.get(destination.destinationId);
+        locationDetails = mapValue as LocationDetails; // Asignación segura con aserción de tipo
+      } else {
+        locationDetails = {
+          locationId: 0,
+          city: undefined,
+          country: undefined,
+          addressLine1: undefined,
+          addressLine2: undefined,
+        };
+      }
       return {
         ...destination,
         location: {
-          city: locationDetails?.city || '',
-          country: locationDetails?.country || '',
+          city: locationDetails.city ?? '',
+          country: locationDetails.country ?? '',
         },
       };
     });
@@ -280,16 +273,24 @@ export const getDestinationProducts = async (
       },
       currency: 'USD',
     };
-    const response = await viatorApi.post<ProductSearchResponse>(
-      '/products/search',
-      searchRequest
-    );
+    const response = await fetch('/viator/products/search', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json;version=2.0',
+        'Content-Type': 'application/json',
+        'Accept-Language': 'es-ES',
+      },
+      body: JSON.stringify(searchRequest),
+    });
+    if (!response.ok)
+      throw new Error(`Error fetching products: ${response.status}`);
+    const data = await response.json();
 
-    if (!response.data.products || response.data.products.length === 0) {
+    if (!data.products || data.products.length === 0) {
       return [];
     }
 
-    return response.data.products
+    return data.products
       .map((product: ProductApiResponse) => {
         if (!product.productCode || !product.title) {
           return null;
@@ -320,11 +321,15 @@ export const getDestinationProducts = async (
           ),
         };
       })
-      .filter((product) => product !== null) as Product[];
+      .filter((product): product is Product => product !== null);
   } catch (error) {
     console.error('Error getting destination products:', error);
     return [];
   }
 };
 
-export default viatorApi;
+export default {
+  getDestinations,
+  searchDestinations,
+  getDestinationProducts,
+};
