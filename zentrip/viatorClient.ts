@@ -1,12 +1,12 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
 const viatorApi = axios.create({
-  baseURL: '/viator',
+  baseURL: 'https://api.viator.com/partner', // Endpoint directo de Viator
   headers: {
     Accept: 'application/json;version=2.0',
     'Content-Type': 'application/json',
     'Accept-Language': 'es-ES',
-    'exp-api-key': import.meta.env.VITE_VIATOR_API_KEY_PROD,
+    'exp-api-key': import.meta.env.VITE_VIATOR_API_KEY_PROD, // Usamos PROD
   },
 });
 
@@ -265,7 +265,9 @@ export const getDestinationProducts = async (
     const searchRequest = {
       filtering: {
         destination: destinationId.toString(),
-        startDate: currentDate,
+        startDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0], // Fecha futura (mañana)
         endDate: thirtyDaysFromNow,
         includeAutomaticTranslations: true,
       },
