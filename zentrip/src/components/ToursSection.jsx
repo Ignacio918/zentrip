@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getDestinationProducts } from '/src/viatorClient.js'; // Ruta absoluta
+import { getDestinationProducts } from '../viatorClient.js';
 
 const ToursSection = () => {
   const [tours, setTours] = useState([]);

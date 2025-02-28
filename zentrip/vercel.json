@@ -2,41 +2,32 @@
   "version": 2,
   "builds": [
     {
-      "src": "dist/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/viator-tours.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/test.js",
-      "use": "@vercel/node"
-    },
-    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
+    },
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/viator/test",
-      "dest": "/api/test",
-      "methods": ["POST", "GET"]
-    },
-    {
       "src": "/viator/products/search",
-      "dest": "/api/viator-tours",
-      "methods": ["POST"]
+      "dest": "/api/viator-tours.js"
+    },
+    {
+      "src": "/viator/test",
+      "dest": "/api/test.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/$1"
+      "dest": "/dist/$1",
+      "continue": true
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/dist/index.html"
     }
   ]
 }
