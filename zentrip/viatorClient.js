@@ -1,11 +1,15 @@
 import axios from 'axios';
 
 const viatorApi = axios.create({
-  baseURL: '/viator', // Alineado con el backup que usa proxy
+  baseURL: '/viator', // Usa el proxy definido en vite.config.js
   headers: {
     Accept: 'application/json;version=2.0',
-    'Content-Type': 'application/json',
     'Accept-Language': 'es-ES',
+  },
+  params: {
+    'exp-api-key':
+      import.meta.env.VITE_VIATOR_API_KEY_PROD ||
+      import.meta.env.VITE_VIATOR_API_KEY_SANDBOX, // Prioriza PROD
   },
 });
 
@@ -15,7 +19,7 @@ viatorApi.interceptors.request.use((request) => {
     url: request.url,
     method: request.method,
     headers: request.headers,
-    data: request.data,
+    params: request.params,
   });
   return request;
 });
@@ -142,34 +146,13 @@ export const getDestinationProducts = async (
   destinationName
 ) => {
   try {
-    const currentDate = new Date().toISOString().split('T')[0];
-    const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0];
-    const searchRequest = {
-      filtering: {
-        destination: destinationId.toString(),
-        startDate: currentDate,
-        endDate: thirtyDaysFromNow,
-        includeAutomaticTranslations: true,
-      },
-      sorting: {
-        sort: 'TRAVELER_RATING',
-        order: 'DESCENDING',
-      },
-      pagination: {
-        start: 1,
-        count: 20,
-      },
-      currency: 'USD',
-    };
-    const response = await viatorApi.post('/products/search', searchRequest);
+    const response = await viatorApi.get('/products/search');
 
-    if (!response.data.products || response.data.products.length === 0) {
+    if (!response.data.productos || response.data.productos.length === 0) {
       return [];
     }
 
-    return response.data.products
+    return response.data.productos
       .map((product) => {
         if (!product.productCode || !product.title) {
           return null;
@@ -177,27 +160,27 @@ export const getDestinationProducts = async (
         return {
           productCode: product.productCode,
           title: product.title,
-          description: product.shortDescription || product.description || '',
+          description: product.description || '',
           price: {
-            amount: product.pricing?.summary?.fromPrice || 0,
-            currency: product.pricing?.summary?.currencyCode || 'USD',
+            amount: product.precios?.resumen?.desdePrecio || 0,
+            currency: product.precios?.moneda || 'USD',
           },
-          rating: product.reviews?.combinedAverageRating || 0,
-          reviewCount: product.reviews?.totalReviews || 0,
+          rating: product.reseñas?.calificaciónPromedioCombinada || 0,
+          reviewCount: product.reseñas?.reseñasTotales || 0,
           photoUrl:
-            product.images?.[0]?.variants?.find((v) => v.height === 400)?.url ||
+            product.images?.[0]?.variants?.find((v) => v.alto === 400)?.url ||
             product.images?.[0]?.variants?.[0]?.url ||
             '',
-          duration: product.duration?.description || '',
-          location: [product.location?.city, product.location?.country]
-            .filter(Boolean)
-            .join(', '),
-          productUrl: generateProductUrl(
-            product.productCode,
-            product.title,
-            destinationName,
-            destinationId
-          ),
+          duration: '', // No está en el ejemplo, podría inferirse
+          location: product.destinos?.[0]?.ref || '',
+          productUrl:
+            product.productUrl ||
+            generateProductUrl(
+              product.productCode,
+              product.title,
+              destinationName,
+              destinationId
+            ),
         };
       })
       .filter((product) => product !== null);
