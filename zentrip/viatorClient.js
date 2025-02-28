@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const viatorApi = axios.create({
-  // Eliminamos baseURL para probar una solicitud directa
+  baseURL: '/api/viator-tours', // Cambiado para usar la función de proxy
   headers: {
     Accept: 'application/json;version=2.0',
     'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ viatorApi.interceptors.response.use(
   (response) => {
     console.log('Response:', {
       status: response.status,
-      data: response.data, // Mostrar datos completos
+      data: response.data,
       headers: response.headers,
     });
     return response;
@@ -34,7 +34,7 @@ viatorApi.interceptors.response.use(
     console.error('API Error:', {
       message: error.message,
       status: error.response?.status,
-      data: error.response?.data, // Mostrar detalles del error
+      data: error.response?.data,
       headers: error.response?.headers,
       config: {
         url: error.config?.url,
@@ -85,9 +85,7 @@ const generateProductUrl = (
 
 export const getDestinations = async () => {
   try {
-    const response = await viatorApi.get(
-      'https://api.viator.com/partner/destinations'
-    );
+    const response = await viatorApi.get('/destinations');
     return response.data.destinations || [];
   } catch (error) {
     console.error('Error getting destinations:', error);
@@ -97,16 +95,13 @@ export const getDestinations = async () => {
 
 export const searchDestinations = async (searchTerm) => {
   try {
-    const response = await viatorApi.get(
-      'https://api.viator.com/partner/destinations/search',
-      {
-        params: {
-          searchTerm,
-          includeDetails: true,
-          language: 'es-ES',
-        },
-      }
-    );
+    const response = await viatorApi.get('/destinations/search', {
+      params: {
+        searchTerm,
+        includeDetails: true,
+        language: 'es-ES',
+      },
+    });
 
     console.log('API Response:', response.data);
 
@@ -117,12 +112,9 @@ export const searchDestinations = async (searchTerm) => {
     const destinations = response.data.destinations;
     const destinationIds = destinations.map((dest) => dest.destinationId);
 
-    const locationsResponse = await viatorApi.post(
-      'https://api.viator.com/partner/locationsBulk',
-      {
-        locationIds: destinationIds,
-      }
-    );
+    const locationsResponse = await viatorApi.post('/locationsBulk', {
+      locationIds: destinationIds,
+    });
 
     const locationsMap = new Map(
       locationsResponse.data.locations.map((loc) => [loc.locationId, loc])
@@ -172,10 +164,7 @@ export const getDestinationProducts = async (
       },
       currency: 'USD',
     };
-    const response = await viatorApi.post(
-      'https://api.viator.com/partner/products/search',
-      searchRequest
-    );
+    const response = await viatorApi.post('', searchRequest); // Vacío porque baseURL ya incluye el endpoint
 
     if (!response.data.products || response.data.products.length === 0) {
       return [];
