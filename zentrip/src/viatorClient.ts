@@ -219,7 +219,7 @@ export const searchDestinations = async (
       let locationDetails: LocationDetails;
       if (locationsMap.has(destination.destinationId)) {
         const mapValue = locationsMap.get(destination.destinationId);
-        locationDetails = mapValue as LocationDetails; // Asignación segura con aserción de tipo
+        locationDetails = mapValue as LocationDetails; // Asignación segura con aserción
       } else {
         locationDetails = {
           locationId: 0,

@@ -10,12 +10,21 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/test.ts",
+      "use": "@vercel/node"
+    },
+    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
     }
   ],
   "routes": [
+    {
+      "src": "/viator/test",
+      "dest": "/api/test",
+      "methods": ["POST", "GET"]
+    },
     {
       "src": "/viator/products/search",
       "dest": "/api/viator-tours",

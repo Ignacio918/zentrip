@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getDestinationProducts } from '../../viatorClient'; // Ajusta la ruta según la ubicación de viatorClient.js
+import { getDestinationProducts } from './viatorClient';
 
 const ToursSection = () => {
   const [tours, setTours] = useState([]);
