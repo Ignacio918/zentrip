@@ -42,7 +42,7 @@ const ToursSection = () => {
   return (
     <section className="py-8">
       <h2 className="text-2xl font-bold text-center mb-6">
-        Explorá actividades increíbles
+        Explorá actividades increíble
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
         {tours.length > 0 ? (
