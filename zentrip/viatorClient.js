@@ -3,10 +3,10 @@ import axios from 'axios';
 const viatorApi = axios.create({
   baseURL: '/viator',
   headers: {
-    Accept: 'application/json;version=2.0',
+    Accept: 'application/json;version=2.0', // Añadido según la documentación
     'Content-Type': 'application/json',
     'Accept-Language': 'es-ES',
-    Authorization: `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_SANDBOX}`, // Cambiado a Bearer
+    Authorization: `Bearer ${import.meta.env.VITE_VIATOR_API_KEY_SANDBOX}`,
   },
 });
 
