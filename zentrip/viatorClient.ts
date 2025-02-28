@@ -7,9 +7,6 @@ const viatorApi = axios.create({
     'Content-Type': 'application/json',
     'Accept-Language': 'es-ES',
   },
-  params: {
-    'exp-api-key': import.meta.env.VITE_VIATOR_API_KEY_PROD, // Usamos PROD
-  },
 });
 
 // Interceptor para debugging
@@ -18,7 +15,6 @@ viatorApi.interceptors.request.use((request) => {
     url: request.url,
     method: request.method,
     headers: request.headers,
-    params: request.params,
     data: request.data,
   });
   return request;

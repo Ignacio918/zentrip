@@ -6,7 +6,7 @@
       "use": "@vercel/static"
     },
     {
-      "src": "api/**/*.ts",
+      "src": "api/viator-tours.ts",
       "use": "@vercel/node"
     },
     {
@@ -18,17 +18,16 @@
   "routes": [
     {
       "src": "/viator/products/search",
-      "dest": "/api/viator-tours"
+      "dest": "/api/viator-tours",
+      "methods": ["POST"]
     },
     {
-      "src": "/viator/(.*)",
-      "dest": "/api/viator-tours"
-    },
-    {
+      "handle": "miss",
       "src": "/(.*)",
       "dest": "/dist/$1"
     },
     {
+      "handle": "miss",
       "src": "/(.*)",
       "dest": "/index.html"
     }

@@ -8,19 +8,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const apiKey = process.env.VITE_VIATOR_API_KEY_PROD;
+    if (!apiKey) {
+      return res
+        .status(500)
+        .json({ error: 'API key not configured in environment variables' });
+    }
     console.log('Procesando solicitud con API Key:', apiKey);
 
-    const url = req.url ?? '/products/search'; // Manejar caso undefined
-    const response = await fetch(`https://api.viator.com/partner${url}`, {
-      method: req.method,
-      headers: new Headers({
-        Accept: 'application/json;version=2.0',
-        'Content-Type': 'application/json',
-        'Accept-Language': 'es-ES',
-        'exp-api-key': apiKey || '',
-      }),
-      body: req.body ? JSON.stringify(req.body) : undefined,
-    });
+    const response = await fetch(
+      'https://api.viator.com/partner/products/search',
+      {
+        method: req.method,
+        headers: {
+          Accept: 'application/json;version=2.0',
+          'Content-Type': 'application/json',
+          'Accept-Language': 'es-ES',
+          'exp-api-key': apiKey,
+        },
+        body: req.body ? JSON.stringify(req.body) : undefined,
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
