@@ -6,11 +6,11 @@
       "use": "@vercel/static"
     },
     {
-      "src": "api/viator-tours.ts",
+      "src": "api/viator-tours.js",
       "use": "@vercel/node"
     },
     {
-      "src": "api/test.ts",
+      "src": "api/test.js",
       "use": "@vercel/node"
     },
     {
