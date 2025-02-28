@@ -17,7 +17,7 @@ export default defineConfig({
         secure: false,
         rewrite: (path) => path.replace(/^\/viator/, ''),
         headers: {
-          Accept: 'application/json;version=2.0',
+          'Accept': 'application/json;version=2.0',
           'Content-Type': 'application/json',
         },
       },

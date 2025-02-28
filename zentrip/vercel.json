@@ -18,8 +18,7 @@
   "routes": [
     {
       "src": "/viator/products/search",
-      "dest": "/api/viator-tours",
-      "methods": ["POST"]
+      "dest": "/api/viator-tours"
     },
     {
       "src": "/(.*)",
