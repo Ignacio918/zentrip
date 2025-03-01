@@ -17,7 +17,7 @@ const ToursSection = () => {
     duration: null,
     rating: null,
   });
-  const [visibleTours, setVisibleTours] = useState(8); // Limitar a 8 tours inicialmente
+  const [visibleTours, setVisibleTours] = useState(8);
   const [reload, setReload] = useState(false);
 
   // Lista de 8 destinos variados para variedad global
@@ -65,6 +65,7 @@ const ToursSection = () => {
           diverseDestinations,
           1
         ); // 1 tour por destino
+        console.log('Tours recomendados cargados:', topTours);
         setRecommendedTours(topTours);
       } catch (error) {
         console.error('Error fetching recommended tours:', error);
@@ -85,6 +86,7 @@ const ToursSection = () => {
           diverseDestinations,
           2
         ); // 2 tours por destino
+        console.log('Tours iniciales cargados:', topTours);
         setTours(topTours);
       } catch (error) {
         console.error('Error fetching initial tours:', error);
@@ -113,6 +115,7 @@ const ToursSection = () => {
           rating: filters.rating,
           limit: 50,
         });
+        console.log('Tours buscados cargados:', products);
         setTours(products);
         setVisibleTours(8); // Resetear a 8 al buscar
       } catch (error) {
@@ -135,7 +138,7 @@ const ToursSection = () => {
   };
 
   const handleLoadMore = () => {
-    setVisibleTours((prev) => Math.min(prev + 8, tours.length)); // Cargar 8 más, sin superar el total
+    setVisibleTours((prev) => Math.min(prev + 8, tours.length));
   };
 
   const handleReload = () => {

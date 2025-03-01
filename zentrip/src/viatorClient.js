@@ -265,9 +265,13 @@ export const getTopToursFromDestinations = async (
         }));
       })
     );
-    // Combinar todos los tours y ordenar por rating
+    // Combinar todos los tours y eliminar duplicados por productCode
     const flattenedTours = allTours.flat().filter(Boolean);
-    return flattenedTours
+    const uniqueTours = Array.from(
+      new Map(flattenedTours.map((tour) => [tour.productCode, tour])).values()
+    );
+    // Ordenar por rating y limitar a 8
+    return uniqueTours
       .sort((a, b) => b.rating - a.rating) // Ordenar por rating descendente
       .slice(0, 8); // Limitar a 8 tours
   } catch (error) {
@@ -278,12 +282,12 @@ export const getTopToursFromDestinations = async (
 
 // Obtener productos de destinos con soporte para filtros y globalidad
 export const getDestinationProducts = async ({
-  destinationId = 732, // Valor por defecto para pruebas (París)
+  destinationId = 732,
   destinationName = 'Global',
   priceRange = null,
   duration = null,
   rating = null,
-  limit = 50, // Aumentar límite para obtener más resultados
+  limit = 50,
 } = {}) => {
   try {
     const currentDate = new Date().toISOString().split('T')[0];
