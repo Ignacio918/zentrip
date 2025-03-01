@@ -251,30 +251,57 @@ export const getTopToursFromDestinations = async (
   limitPerDestination = 4
 ) => {
   try {
+    // Try with more destinations or with increased timeout
     const allTours = await Promise.all(
       destinations.map(async (dest) => {
-        const products = await getDestinationProducts({
-          destinationId: dest.id,
-          destinationName: dest.name,
-          limit: limitPerDestination,
-        });
-        console.log(`Tours desde ${dest.name} (ID: ${dest.id}):`, products); // Depuración por destino
-        return products.map((product) => ({
-          ...product,
-          destinationId: dest.id,
-          destinationName: dest.name,
-        }));
+        try {
+          const products = await getDestinationProducts({
+            destinationId: dest.id,
+            destinationName: dest.name,
+            limit: limitPerDestination,
+          });
+          console.log(`Tours desde ${dest.name} (ID: ${dest.id}):`, products);
+          return products.map((product) => ({
+            ...product,
+            destinationId: dest.id,
+            destinationName: dest.name,
+          }));
+        } catch (err) {
+          console.warn(`Error fetching tours for ${dest.name}:`, err);
+          return []; // Return empty array for this destination
+        }
       })
     );
-    // Combinar todos los tours y eliminar duplicados por productCode
+
+    // Combine all tours and remove duplicates by productCode
     const flattenedTours = allTours.flat().filter(Boolean);
+
+    // If we have very few tours, try fetching more from Paris (ID: 732) as fallback
+    if (flattenedTours.length < 4) {
+      try {
+        const fallbackTours = await getDestinationProducts({
+          destinationId: 732,
+          destinationName: 'Paris',
+          limit: 8 - flattenedTours.length,
+        });
+
+        flattenedTours.push(
+          ...fallbackTours.map((tour) => ({
+            ...tour,
+            destinationId: 732,
+            destinationName: 'Paris',
+          }))
+        );
+      } catch (err) {
+        console.warn('Error fetching fallback tours from Paris:', err);
+      }
+    }
+
     const uniqueTours = Array.from(
       new Map(flattenedTours.map((tour) => [tour.productCode, tour])).values()
     );
-    // Ordenar por rating y limitar a 8
-    return uniqueTours
-      .sort((a, b) => b.rating - a.rating) // Ordenar por rating descendente
-      .slice(0, 8); // Limitar a 8 tours
+
+    return uniqueTours.sort((a, b) => b.rating - a.rating).slice(0, 8);
   } catch (error) {
     console.error('Error getting top tours from destinations:', error);
     return [];
@@ -291,89 +318,108 @@ export const getDestinationProducts = async ({
   limit = 50,
 } = {}) => {
   try {
-    const currentDate = new Date().toISOString().split('T')[0];
-    const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0];
+    // Add retry logic
+    const fetchWithRetry = async (retries = 2) => {
+      try {
+        const currentDate = new Date().toISOString().split('T')[0];
+        const thirtyDaysFromNow = new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .split('T')[0];
 
-    const searchRequest = {
-      filtering: {
-        ...(destinationId && { destination: destinationId.toString() }),
-        startDate: currentDate,
-        endDate: thirtyDaysFromNow,
-        includeAutomaticTranslations: true,
-        ...(priceRange && {
-          priceRange: { min: priceRange.min, max: priceRange.max },
-        }),
-        ...(duration && { duration }),
-        ...(rating && { minimumRating: rating }),
-      },
-      sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
-      pagination: { start: 1, count: limit },
-      currency: 'USD',
+        const searchRequest = {
+          filtering: {
+            ...(destinationId && { destination: destinationId.toString() }),
+            startDate: currentDate,
+            endDate: thirtyDaysFromNow,
+            includeAutomaticTranslations: true,
+            ...(priceRange && {
+              priceRange: { min: priceRange.min, max: priceRange.max },
+            }),
+            ...(duration && { duration }),
+            ...(rating && { minimumRating: rating }),
+          },
+          sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
+          pagination: { start: 1, count: limit },
+          currency: 'USD',
+        };
+
+        console.log('Solicitud enviada a Viator:', searchRequest);
+
+        const response = await fetch('/viator/products/search', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json;version=2.0',
+            'Content-Type': 'application/json',
+            'Accept-Language': 'es-ES',
+          },
+          body: JSON.stringify(searchRequest),
+          // Add timeout to prevent hanging requests
+          signal: AbortSignal.timeout(15000),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Error HTTP: ${response.status} - ${errorText}`);
+          throw new Error(
+            `Error fetching products: ${response.status} - ${errorText}`
+          );
+        }
+
+        const data = await response.json();
+        console.log('Respuesta completa de Viator:', data);
+
+        if (!data.products || data.products.length === 0) {
+          console.warn('No products found in response:', data);
+          return [];
+        }
+
+        return data.products
+          .map((product) => {
+            if (!product.productCode || !product.title) {
+              console.warn('Producto inválido encontrado:', product);
+              return null;
+            }
+            return {
+              productCode: product.productCode,
+              title: product.title,
+              description:
+                product.shortDescription || product.description || '',
+              price: {
+                amount: product.pricing?.summary?.fromPrice || 0,
+                currency: product.pricing?.summary?.currencyCode || 'USD',
+              },
+              rating: product.reviews?.combinedAverageRating || 0,
+              reviewCount: product.reviews?.totalReviews || 0,
+              photoUrl:
+                product.images?.[0]?.variants?.find((v) => v.height === 400)
+                  ?.url ||
+                product.images?.[0]?.variants?.[0]?.url ||
+                '',
+              duration: product.duration?.description || '',
+              location: [product.location?.city, product.location?.country]
+                .filter(Boolean)
+                .join(', '),
+              productUrl: generateProductUrl(
+                product.productCode,
+                product.title,
+                destinationName,
+                destinationId || 0
+              ),
+            };
+          })
+          .filter((product) => product !== null);
+      } catch (err) {
+        if (retries > 0) {
+          console.log(`Retrying API call, ${retries} attempts left`);
+          return fetchWithRetry(retries - 1);
+        }
+        throw err;
+      }
     };
 
-    console.log('Solicitud enviada a Viator:', searchRequest);
-
-    const response = await fetch('/viator/products/search', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json;version=2.0',
-        'Content-Type': 'application/json',
-        'Accept-Language': 'es-ES',
-      },
-      body: JSON.stringify(searchRequest),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Error HTTP: ${response.status} - ${errorText}`);
-      throw new Error(
-        `Error fetching products: ${response.status} - ${errorText}`
-      );
-    }
-
-    const data = await response.json();
-    console.log('Respuesta completa de Viator:', data);
-
-    if (!data.products || data.products.length === 0) {
-      console.warn('No products found in response:', data);
-      return [];
-    }
-
-    return data.products
-      .map((product) => {
-        if (!product.productCode || !product.title) {
-          console.warn('Producto inválido encontrado:', product);
-          return null;
-        }
-        return {
-          productCode: product.productCode,
-          title: product.title,
-          description: product.shortDescription || product.description || '',
-          price: {
-            amount: product.pricing?.summary?.fromPrice || 0,
-            currency: product.pricing?.summary?.currencyCode || 'USD',
-          },
-          rating: product.reviews?.combinedAverageRating || 0,
-          reviewCount: product.reviews?.totalReviews || 0,
-          photoUrl:
-            product.images?.[0]?.variants?.find((v) => v.height === 400)?.url ||
-            product.images?.[0]?.variants?.[0]?.url ||
-            '',
-          duration: product.duration?.description || '',
-          location: [product.location?.city, product.location?.country]
-            .filter(Boolean)
-            .join(', '),
-          productUrl: generateProductUrl(
-            product.productCode,
-            product.title,
-            destinationName,
-            destinationId || 0
-          ),
-        };
-      })
-      .filter((product) => product !== null);
+    return await fetchWithRetry();
   } catch (error) {
     console.error('Error getting destination products:', error);
     return [];
