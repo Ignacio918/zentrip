@@ -13,7 +13,7 @@
   ],
   "routes": [
     {
-      "src": "/viator/products/search",
+      "src": "/viator/(.*)",
       "dest": "/api/viator-tours.js"
     },
     {
