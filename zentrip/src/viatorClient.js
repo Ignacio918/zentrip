@@ -200,6 +200,10 @@ export const searchDestinations = async (searchTerm) => {
     const destinations = data.destinations;
     const destinationIds = destinations.map((dest) => dest.destinationId);
 
+    if (destinationIds.length === 0) {
+      return [];
+    }
+
     const locationsResponse = await fetch('/viator/locationsBulk', {
       method: 'POST',
       headers: {
@@ -241,7 +245,7 @@ export const searchDestinations = async (searchTerm) => {
     return destinationsWithDetails;
   } catch (error) {
     console.error('Error searching destinations:', error);
-    throw error;
+    return []; // Return empty array instead of throwing to improve UX
   }
 };
 
@@ -251,57 +255,104 @@ export const getTopToursFromDestinations = async (
   limitPerDestination = 6
 ) => {
   try {
-    // Try with more destinations or with increased timeout
-    const allTours = await Promise.all(
-      destinations.map(async (dest) => {
-        try {
-          const products = await getDestinationProducts({
-            destinationId: dest.id,
-            destinationName: dest.name,
-            limit: limitPerDestination,
-          });
-          console.log(`Tours desde ${dest.name} (ID: ${dest.id}):`, products);
-          return products.map((product) => ({
-            ...product,
-            destinationId: dest.id,
-            destinationName: dest.name,
-          }));
-        } catch (err) {
-          console.warn(`Error fetching tours for ${dest.name}:`, err);
-          return []; // Return empty array for this destination
-        }
-      })
+    console.log(
+      'Fetching tours from destinations:',
+      JSON.stringify(destinations)
     );
 
-    // Combine all tours and remove duplicates by productCode
-    const flattenedTours = allTours.flat().filter(Boolean);
+    // Track unique product codes to avoid duplicates across destinations
+    const uniqueProductCodes = new Set();
+    const allTours = [];
 
-    // If we have very few tours, try fetching more from Paris (ID: 732) as fallback
-    if (flattenedTours.length < 4) {
+    // Process destinations sequentially to better handle errors and track progress
+    for (const dest of destinations) {
       try {
-        const fallbackTours = await getDestinationProducts({
-          destinationId: 732,
-          destinationName: 'Paris',
-          limit: 8 - flattenedTours.length,
+        console.log(`Fetching tours from ${dest.name} (ID: ${dest.id})...`);
+        const products = await getDestinationProducts({
+          destinationId: dest.id,
+          destinationName: dest.name,
+          limit: limitPerDestination,
         });
 
-        flattenedTours.push(
-          ...fallbackTours.map((tour) => ({
-            ...tour,
-            destinationId: 732,
-            destinationName: 'Paris',
-          }))
-        );
+        console.log(`Received ${products.length} tours from ${dest.name}`);
+
+        // Add only unique products
+        for (const product of products) {
+          if (!uniqueProductCodes.has(product.productCode)) {
+            uniqueProductCodes.add(product.productCode);
+            allTours.push({
+              ...product,
+              destinationId: dest.id,
+              destinationName: dest.name,
+            });
+          }
+        }
       } catch (err) {
-        console.warn('Error fetching fallback tours from Paris:', err);
+        console.warn(`Error fetching tours for ${dest.name}:`, err);
+        // Continue with next destination
       }
     }
 
-    const uniqueTours = Array.from(
-      new Map(flattenedTours.map((tour) => [tour.productCode, tour])).values()
-    );
+    // If we have very few tours, try fallback destinations
+    if (allTours.length < 8) {
+      const fallbackDestinations = [
+        { id: 732, name: 'Paris' }, // Paris is reliable
+        { id: 684, name: 'Barcelona' }, // Barcelona as backup
+        { id: 662, name: 'Madrid' }, // Madrid as backup
+        { id: 687, name: 'London' }, // London as backup
+        { id: 546, name: 'Rome' }, // Rome as backup
+      ];
 
-    return uniqueTours.sort((a, b) => b.rating - a.rating).slice(0, 8);
+      console.log(
+        `Only found ${allTours.length} tours, trying fallback destinations`
+      );
+
+      for (const fallbackDest of fallbackDestinations) {
+        // Skip if we already have enough tours
+        if (allTours.length >= 8) break;
+
+        // Skip if this destination was already in the original list
+        if (destinations.some((d) => d.id === fallbackDest.id)) continue;
+
+        try {
+          console.log(
+            `Trying fallback destination ${fallbackDest.name} (ID: ${fallbackDest.id})`
+          );
+          const fallbackTours = await getDestinationProducts({
+            destinationId: fallbackDest.id,
+            destinationName: fallbackDest.name,
+            limit: 8 - allTours.length,
+          });
+
+          for (const tour of fallbackTours) {
+            if (!uniqueProductCodes.has(tour.productCode)) {
+              uniqueProductCodes.add(tour.productCode);
+              allTours.push({
+                ...tour,
+                destinationId: fallbackDest.id,
+                destinationName: fallbackDest.name,
+              });
+            }
+
+            // Stop if we have enough tours
+            if (allTours.length >= 8) break;
+          }
+        } catch (err) {
+          console.warn(
+            `Error fetching fallback tours from ${fallbackDest.name}:`,
+            err
+          );
+        }
+      }
+    }
+
+    // Sort by rating and limit to 8 tours
+    const sortedTours = allTours
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 8);
+
+    console.log(`Returning ${sortedTours.length} unique sorted tours`);
+    return sortedTours;
   } catch (error) {
     console.error('Error getting top tours from destinations:', error);
     return [];
@@ -321,31 +372,52 @@ export const getDestinationProducts = async ({
     // Add retry logic
     const fetchWithRetry = async (retries = 2) => {
       try {
+        // Expand date range to get more results
         const currentDate = new Date().toISOString().split('T')[0];
-        const thirtyDaysFromNow = new Date(
-          Date.now() + 30 * 24 * 60 * 60 * 1000
+        const ninetyDaysFromNow = new Date(
+          Date.now() + 90 * 24 * 60 * 60 * 1000
         )
           .toISOString()
           .split('T')[0];
 
+        // Build appropriate filters based on parameters
+        const filters = {
+          destination: destinationId.toString(),
+          startDate: currentDate,
+          endDate: ninetyDaysFromNow,
+          includeAutomaticTranslations: true,
+        };
+
+        // Only add filters if they're actually provided
+        if (
+          priceRange &&
+          (priceRange.min !== undefined || priceRange.max !== undefined)
+        ) {
+          filters.priceRange = {
+            min: priceRange.min ?? 0,
+            max: priceRange.max ?? 1000,
+          };
+        }
+
+        if (duration) {
+          filters.duration = duration;
+        }
+
+        if (rating && rating > 0) {
+          filters.minimumRating = rating;
+        }
+
         const searchRequest = {
-          filtering: {
-            ...(destinationId && { destination: destinationId.toString() }),
-            startDate: currentDate,
-            endDate: thirtyDaysFromNow,
-            includeAutomaticTranslations: true,
-            ...(priceRange && {
-              priceRange: { min: priceRange.min, max: priceRange.max },
-            }),
-            ...(duration && { duration }),
-            ...(rating && { minimumRating: rating }),
-          },
+          filtering: filters,
           sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
           pagination: { start: 1, count: limit },
           currency: 'USD',
         };
 
-        console.log('Solicitud enviada a Viator:', searchRequest);
+        console.log(
+          `Requesting products for ${destinationName} (ID: ${destinationId})`,
+          searchRequest
+        );
 
         const response = await fetch('/viator/products/search', {
           method: 'POST',
@@ -356,7 +428,7 @@ export const getDestinationProducts = async ({
           },
           body: JSON.stringify(searchRequest),
           // Add timeout to prevent hanging requests
-          signal: AbortSignal.timeout(15000),
+          signal: AbortSignal.timeout(20000), // Increased timeout
         });
 
         if (!response.ok) {
@@ -368,7 +440,9 @@ export const getDestinationProducts = async ({
         }
 
         const data = await response.json();
-        console.log('Respuesta completa de Viator:', data);
+        console.log(
+          `Received ${data.products?.length || 0} products for ${destinationName}`
+        );
 
         if (!data.products || data.products.length === 0) {
           console.warn('No products found in response:', data);
@@ -412,7 +486,10 @@ export const getDestinationProducts = async ({
           .filter((product) => product !== null);
       } catch (err) {
         if (retries > 0) {
-          console.log(`Retrying API call, ${retries} attempts left`);
+          console.log(
+            `Retrying API call for ${destinationName}, ${retries} attempts left`
+          );
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second before retry
           return fetchWithRetry(retries - 1);
         }
         throw err;
@@ -421,7 +498,7 @@ export const getDestinationProducts = async ({
 
     return await fetchWithRetry();
   } catch (error) {
-    console.error('Error getting destination products:', error);
+    console.error(`Error getting products for ${destinationName}:`, error);
     return [];
   }
 };
