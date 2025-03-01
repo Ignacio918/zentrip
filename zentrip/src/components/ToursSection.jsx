@@ -63,8 +63,8 @@ const ToursSection = () => {
       try {
         const topTours = await getTopToursFromDestinations(
           diverseDestinations,
-          3
-        ); // Try fetching more tours per destination
+          6
+        ); // Increased to 6
         console.log('Tours recomendados cargados:', topTours);
         setRecommendedTours(topTours);
       } catch (error) {
@@ -84,7 +84,7 @@ const ToursSection = () => {
       try {
         const topTours = await getTopToursFromDestinations(
           diverseDestinations,
-          3
+          6
         );
         console.log('Tours iniciales cargados:', topTours);
 
@@ -96,7 +96,7 @@ const ToursSection = () => {
           (tour) => !recommendedProductCodes.has(tour.productCode)
         );
 
-        setTours(uniqueTours);
+        setTours(uniqueTours.length > 0 ? uniqueTours : topTours); // Use topTours if no unique tours found
       } catch (error) {
         console.error('Error fetching initial tours:', error);
         setError('Error al cargar tours iniciales.');
@@ -105,7 +105,7 @@ const ToursSection = () => {
       }
     };
     fetchInitialTours();
-  }, [recommendedTours]); // Add recommendedTours as a dependency
+  }, [recommendedTours]); // Dependency on recommendedTours
 
   // Cargar tours según búsqueda o filtros
   useEffect(() => {
@@ -272,7 +272,7 @@ const ToursSection = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
-        {tours.length > 0 ? (
+        {tours.length > 0 || recommendedTours.length > 0 ? (
           <>
             {tours.slice(0, visibleTours).map((tour) => (
               <div

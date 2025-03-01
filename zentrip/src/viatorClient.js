@@ -248,7 +248,7 @@ export const searchDestinations = async (searchTerm) => {
 // Obtener los mejores tours de una lista de destinos
 export const getTopToursFromDestinations = async (
   destinations = [],
-  limitPerDestination = 4
+  limitPerDestination = 6
 ) => {
   try {
     // Try with more destinations or with increased timeout
