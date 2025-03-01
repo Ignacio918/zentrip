@@ -248,7 +248,7 @@ export const searchDestinations = async (searchTerm) => {
 // Obtener los mejores tours de una lista de destinos
 export const getTopToursFromDestinations = async (
   destinations = [],
-  limitPerDestination = 1
+  limitPerDestination = 4
 ) => {
   try {
     const allTours = await Promise.all(
@@ -258,6 +258,7 @@ export const getTopToursFromDestinations = async (
           destinationName: dest.name,
           limit: limitPerDestination,
         });
+        console.log(`Tours desde ${dest.name} (ID: ${dest.id}):`, products); // Depuración por destino
         return products.map((product) => ({
           ...product,
           destinationId: dest.id,
