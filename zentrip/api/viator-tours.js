@@ -1,8 +1,21 @@
 export default async function handler(req, res) {
-  // Extraer la parte de la ruta después de /viator/
-  const apiPath = req.url.split('/viator/')[1] || '';
-  console.log(`API Viator - Método: ${req.method}, Ruta: ${apiPath}`);
-  console.log('URL completa:', req.url);
+  // Extraer la ruta y los parámetros
+  let apiPath = '';
+  let queryParams = '';
+
+  // Obtener la ruta después de /viator/
+  if (req.url.includes('?')) {
+    const parts = req.url.split('?');
+    apiPath = parts[0].replace(/^\/viator\//, '');
+    queryParams = '?' + parts[1];
+  } else {
+    apiPath = req.url.replace(/^\/viator\//, '');
+  }
+
+  console.log(
+    `API Viator - Método: ${req.method}, Ruta: ${apiPath}, Params: ${queryParams}`
+  );
+  console.log('Body recibido:', req.body);
 
   const apiKey = process.env.VITE_VIATOR_API_KEY_PROD;
   if (!apiKey) {
@@ -14,7 +27,7 @@ export default async function handler(req, res) {
 
   try {
     // Construir la URL completa para la API de Viator
-    const apiUrl = `https://api.viator.com/partner/${apiPath}`;
+    const apiUrl = `https://api.viator.com/partner/${apiPath}${queryParams}`;
     console.log(`Enviando solicitud a Viator: ${apiUrl}`);
 
     // Configurar las opciones para la solicitud

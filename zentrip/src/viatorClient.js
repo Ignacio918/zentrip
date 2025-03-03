@@ -9,7 +9,7 @@ const LocationDetails = {
   addressLine2: undefined,
 };
 
-// Función para generar URLs limpias para productos
+// Función para generar URLs limpias para productos con parámetro de afiliado
 const generateProductUrl = (
   productCode,
   title,
@@ -44,7 +44,10 @@ const generateProductUrl = (
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 
-  return `https://www.viator.com/es-ES/tours/${cleanDestinationName}/${cleanTitle}/d${destinationId}-${productCode}`;
+  // Puedes actualizar este valor cuando tengas tu código de afiliado de Viator
+  const affiliateParam = 'partner_source=zentrip';
+
+  return `https://www.viator.com/es-ES/tours/${cleanDestinationName}/${cleanTitle}/d${destinationId}-${productCode}?${affiliateParam}`;
 };
 
 // Obtener lista de destinos
@@ -82,183 +85,245 @@ export const searchDestinations = async (searchTerm) => {
 
     console.log(`Buscando destinos para: "${searchTerm}"`);
 
-    // Codificar correctamente los parámetros de la URL
-    const params = new URLSearchParams({
-      searchTerm: searchTerm.trim(),
-      includeDetails: 'true',
-      language: 'es-ES',
-    });
+    // SOLUCIÓN TEMPORAL: Usar destinos predefinidos mientras solucionamos la API
+    const lowerSearchTerm = searchTerm.toLowerCase().trim();
 
-    const url = `/viator/destinations/search?${params.toString()}`;
-    console.log(`Enviando solicitud a: ${url}`);
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json;version=2.0',
-        'Accept-Language': 'es-ES',
-      },
-      signal: AbortSignal.timeout(20000), // 20 segundos de timeout
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(
-        `Error en búsqueda de destinos: ${response.status} - ${errorText}`
-      );
-
-      // Para destinos populares, podemos tener fallbacks preparados
-      if (
-        searchTerm.toLowerCase().includes('buenos') ||
-        searchTerm.toLowerCase().includes('argentina')
-      ) {
-        console.log('Usando destino fallback para Buenos Aires');
-        return [
-          {
-            destinationId: 30603, // ID para Buenos Aires
-            name: 'Buenos Aires',
-            type: 'CITY',
-            location: { city: 'Buenos Aires', country: 'Argentina' },
-          },
-        ];
-      }
-
-      if (
-        searchTerm.toLowerCase().includes('rio') ||
-        searchTerm.toLowerCase().includes('brazil') ||
-        searchTerm.toLowerCase().includes('brasil')
-      ) {
-        console.log('Usando destino fallback para Río de Janeiro');
-        return [
-          {
-            destinationId: 318,
-            name: 'Río de Janeiro',
-            type: 'CITY',
-            location: { city: 'Río de Janeiro', country: 'Brasil' },
-          },
-        ];
-      }
-
-      throw new Error(`Error searching destinations: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log(`Búsqueda encontró ${data.destinations?.length || 0} destinos`);
-
-    if (!data.destinations || data.destinations.length === 0) {
-      console.warn('No se encontraron destinos');
-      return [];
-    }
-
-    const destinations = data.destinations;
-
-    // Si no hay IDs de destino, devolvemos la lista sin detalles adicionales
-    if (destinations.length === 0) {
-      return [];
-    }
-
-    const destinationIds = destinations.map((dest) => dest.destinationId);
-
-    try {
-      // Obtener detalles adicionales de ubicación
-      console.log(
-        `Solicitando detalles para ${destinationIds.length} ubicaciones`
-      );
-      const locationsResponse = await fetch('/viator/locations/bulk', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json;version=2.0',
+    // Lista de destinos predefinidos para búsquedas comunes
+    const predefinedDestinations = [
+      {
+        terms: ['paris', 'francia', 'france'],
+        destination: {
+          destinationId: 732,
+          name: 'Paris',
+          type: 'CITY',
+          location: { city: 'Paris', country: 'France' },
         },
-        body: JSON.stringify({ locationIds: destinationIds }),
-        signal: AbortSignal.timeout(15000),
-      });
-
-      if (!locationsResponse.ok) {
-        console.warn(
-          `Error obteniendo detalles de ubicación: ${locationsResponse.status}`
-        );
-        // Continuamos sin detalles adicionales
-        return destinations.map((dest) => ({
-          ...dest,
-          location: { city: dest.name, country: '' },
-        }));
-      }
-
-      const locationsData = await locationsResponse.json();
-      console.log(
-        `Recibidos detalles para ${locationsData.locations?.length || 0} ubicaciones`
-      );
-
-      // Crear un mapa de ubicaciones por ID para fácil acceso
-      const locationsMap = new Map();
-      if (locationsData.locations && locationsData.locations.length > 0) {
-        locationsData.locations.forEach((loc) => {
-          locationsMap.set(loc.locationId, loc);
-        });
-      }
-
-      // Combinar destinos con detalles de ubicación
-      return destinations.map((dest) => {
-        const locationDetails = locationsMap.get(dest.destinationId) || {
-          city: dest.name || '',
-          country: '',
-        };
-
-        return {
-          ...dest,
-          location: {
-            city: locationDetails.city || dest.name || '',
-            country: locationDetails.country || '',
-          },
-        };
-      });
-    } catch (locError) {
-      console.warn('Error obteniendo detalles de ubicación:', locError);
-      // En caso de error, devolvemos los destinos sin detalles adicionales
-      return destinations.map((dest) => ({
-        ...dest,
-        location: { city: dest.name || '', country: '' },
-      }));
-    }
-  } catch (error) {
-    console.error('Error en búsqueda de destinos:', error);
-
-    // Si la búsqueda falla completamente, verificar términos comunes y usar fallbacks
-    if (
-      searchTerm.toLowerCase().includes('buenos') ||
-      searchTerm.toLowerCase().includes('argentina')
-    ) {
-      return [
-        {
+      },
+      {
+        terms: ['barcelona', 'españa', 'spain'],
+        destination: {
+          destinationId: 684,
+          name: 'Barcelona',
+          type: 'CITY',
+          location: { city: 'Barcelona', country: 'Spain' },
+        },
+      },
+      {
+        terms: ['madrid', 'españa', 'spain'],
+        destination: {
+          destinationId: 662,
+          name: 'Madrid',
+          type: 'CITY',
+          location: { city: 'Madrid', country: 'Spain' },
+        },
+      },
+      {
+        terms: ['london', 'londres', 'reino unido', 'uk', 'england'],
+        destination: {
+          destinationId: 687,
+          name: 'London',
+          type: 'CITY',
+          location: { city: 'London', country: 'United Kingdom' },
+        },
+      },
+      {
+        terms: ['rome', 'roma', 'italia', 'italy'],
+        destination: {
+          destinationId: 546,
+          name: 'Rome',
+          type: 'CITY',
+          location: { city: 'Rome', country: 'Italy' },
+        },
+      },
+      {
+        terms: ['new york', 'nueva york', 'nyc', 'estados unidos', 'usa'],
+        destination: {
+          destinationId: 712,
+          name: 'New York',
+          type: 'CITY',
+          location: { city: 'New York', country: 'United States' },
+        },
+      },
+      {
+        terms: ['tokio', 'tokyo', 'japón', 'japan'],
+        destination: {
+          destinationId: 10812,
+          name: 'Tokyo',
+          type: 'CITY',
+          location: { city: 'Tokyo', country: 'Japan' },
+        },
+      },
+      {
+        terms: ['sydney', 'sidney', 'australia'],
+        destination: {
+          destinationId: 357,
+          name: 'Sydney',
+          type: 'CITY',
+          location: { city: 'Sydney', country: 'Australia' },
+        },
+      },
+      {
+        terms: ['buenos aires', 'argentina'],
+        destination: {
           destinationId: 30603,
           name: 'Buenos Aires',
           type: 'CITY',
           location: { city: 'Buenos Aires', country: 'Argentina' },
         },
-      ];
-    }
-
-    if (
-      searchTerm.toLowerCase().includes('rio') ||
-      searchTerm.toLowerCase().includes('brazil') ||
-      searchTerm.toLowerCase().includes('brasil')
-    ) {
-      return [
-        {
+      },
+      {
+        terms: ['rio de janeiro', 'rio', 'brasil', 'brazil'],
+        destination: {
           destinationId: 318,
-          name: 'Río de Janeiro',
+          name: 'Rio de Janeiro',
           type: 'CITY',
-          location: { city: 'Río de Janeiro', country: 'Brasil' },
+          location: { city: 'Rio de Janeiro', country: 'Brazil' },
         },
-      ];
+      },
+      {
+        terms: ['ciudad del cabo', 'cape town', 'sudáfrica', 'south africa'],
+        destination: {
+          destinationId: 318,
+          name: 'Cape Town',
+          type: 'CITY',
+          location: { city: 'Cape Town', country: 'South Africa' },
+        },
+      },
+    ];
+
+    // Buscar coincidencias en nuestros destinos predefinidos
+    const matchingDestinations = [];
+    for (const item of predefinedDestinations) {
+      if (item.terms.some((term) => lowerSearchTerm.includes(term))) {
+        matchingDestinations.push(item.destination);
+      }
     }
 
-    // Devolver array vacío para mejorar experiencia de usuario en otros casos
-    return [];
+    if (matchingDestinations.length > 0) {
+      console.log(
+        `Se encontraron ${matchingDestinations.length} destinos predefinidos`
+      );
+      return matchingDestinations;
+    }
+
+    // Si no encontramos coincidencias predefinidas, intentamos con la API real
+    try {
+      const params = new URLSearchParams({
+        searchTerm: searchTerm.trim(),
+        includeDetails: 'true',
+        language: 'es-ES',
+      });
+
+      const url = `/viator/destinations/search?${params.toString()}`;
+      console.log(`Enviando solicitud a: ${url}`);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json;version=2.0',
+          'Accept-Language': 'es-ES',
+        },
+        signal: AbortSignal.timeout(20000), // 20 segundos de timeout
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `Error en búsqueda de destinos: ${response.status} - ${errorText}`
+        );
+        throw new Error(`Error searching destinations: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(
+        `Búsqueda encontró ${data.destinations?.length || 0} destinos`
+      );
+
+      if (!data.destinations || data.destinations.length === 0) {
+        console.warn('No se encontraron destinos');
+        return [];
+      }
+
+      const destinations = data.destinations;
+
+      // Si no hay IDs de destino, devolvemos la lista sin detalles adicionales
+      if (destinations.length === 0) {
+        return [];
+      }
+
+      const destinationIds = destinations.map((dest) => dest.destinationId);
+
+      try {
+        // Obtener detalles adicionales de ubicación
+        console.log(
+          `Solicitando detalles para ${destinationIds.length} ubicaciones`
+        );
+        const locationsResponse = await fetch('/viator/locations/bulk', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json;version=2.0',
+          },
+          body: JSON.stringify({ locationIds: destinationIds }),
+          signal: AbortSignal.timeout(15000),
+        });
+
+        if (!locationsResponse.ok) {
+          console.warn(
+            `Error obteniendo detalles de ubicación: ${locationsResponse.status}`
+          );
+          // Continuamos sin detalles adicionales
+          return destinations.map((dest) => ({
+            ...dest,
+            location: { city: dest.name, country: '' },
+          }));
+        }
+
+        const locationsData = await locationsResponse.json();
+        console.log(
+          `Recibidos detalles para ${locationsData.locations?.length || 0} ubicaciones`
+        );
+
+        // Crear un mapa de ubicaciones por ID para fácil acceso
+        const locationsMap = new Map();
+        if (locationsData.locations && locationsData.locations.length > 0) {
+          locationsData.locations.forEach((loc) => {
+            locationsMap.set(loc.locationId, loc);
+          });
+        }
+
+        // Combinar destinos con detalles de ubicación
+        return destinations.map((dest) => {
+          const locationDetails = locationsMap.get(dest.destinationId) || {
+            city: dest.name || '',
+            country: '',
+          };
+
+          return {
+            ...dest,
+            location: {
+              city: locationDetails.city || dest.name || '',
+              country: locationDetails.country || '',
+            },
+          };
+        });
+      } catch (locError) {
+        console.warn('Error obteniendo detalles de ubicación:', locError);
+        // En caso de error, devolvemos los destinos sin detalles adicionales
+        return destinations.map((dest) => ({
+          ...dest,
+          location: { city: dest.name || '', country: '' },
+        }));
+      }
+    } catch (apiError) {
+      console.error('Error en la API de destinos:', apiError);
+      return []; // Devolver vacío si la API falla
+    }
+  } catch (error) {
+    console.error('Error en búsqueda de destinos:', error);
+    return []; // Devolver array vacío para mejorar experiencia de usuario
   }
 };
-
 // Obtener los mejores tours de una lista de destinos
 export const getTopToursFromDestinations = async (
   destinations = [],
