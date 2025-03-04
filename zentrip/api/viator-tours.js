@@ -15,7 +15,15 @@ export default async function handler(req, res) {
   console.log(
     `API Viator - Método: ${req.method}, Ruta: ${apiPath}, Params: ${queryParams}`
   );
-  console.log('Body recibido:', req.body);
+
+  // Mostrar body detallado para debuggear productos
+  if (apiPath === 'products/search' && req.method === 'POST' && req.body) {
+    const bodyStr =
+      typeof req.body === 'string'
+        ? req.body
+        : JSON.stringify(req.body, null, 2);
+    console.log('Body para products/search:', bodyStr);
+  }
 
   const apiKey = process.env.VITE_VIATOR_API_KEY_PROD;
   if (!apiKey) {
@@ -45,10 +53,11 @@ export default async function handler(req, res) {
       fetchOptions.headers['Content-Type'] = 'application/json';
       fetchOptions.body =
         typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-      console.log('Body enviado:', fetchOptions.body);
     }
 
+    console.log(`Iniciando petición a Viator...`);
     const response = await fetch(apiUrl, fetchOptions);
+    console.log(`Recibida respuesta de Viator con status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -62,7 +71,18 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    console.log(`Respuesta exitosa de Viator para ${apiPath}`);
+
+    // Información adicional para endpoints específicos
+    if (apiPath === 'products/search') {
+      console.log(`Productos encontrados: ${data.products?.length || 0}`);
+    } else if (apiPath === 'search/freetext') {
+      console.log(`Resultados encontrados: ${data.data?.length || 0}`);
+    } else if (apiPath.startsWith('products/') && !apiPath.endsWith('search')) {
+      console.log(
+        `Detalles de producto recibidos: ${data.productCode || 'Sin código'}`
+      );
+    }
+
     return res.status(200).json(data);
   } catch (error) {
     console.error(`Error en proxy de Viator: ${error.message}`);
