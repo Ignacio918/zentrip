@@ -7,15 +7,11 @@
       "config": { "distDir": "dist" }
     },
     {
-      "src": "api/*.js",
+      "src": "api/**/*.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
-    {
-      "src": "/viator/(.*)",
-      "dest": "/api/viator-tours.js"
-    },
     {
       "src": "/(.*)",
       "dest": "/dist/$1",

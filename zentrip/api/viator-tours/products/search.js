@@ -10,7 +10,7 @@ export default async function handler(req, res) {
       console.log('Body para products/search:', bodyStr);
     }
   
-    const apiKey = process.env.VITE_VIATOR_API_KEY_PROD || process.env.VIATOR_API_KEY_PROD;
+    const apiKey = process.env.VIATOR_API_KEY_PROD;
     if (!apiKey) {
       console.error('API key no encontrada en variables de entorno');
       return res
