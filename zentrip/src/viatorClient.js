@@ -1,4 +1,4 @@
-// Improved function to generate valid Viator product URLs
+// Función mejorada para generar URLs correctas para productos de Viator
 export const generateProductUrl = (
   productCode,
   title,
@@ -10,7 +10,7 @@ export const generateProductUrl = (
     return '#';
   }
 
-  // Basic sanitization for URL parameters
+  // Sanitización básica para parámetros de URL
   const cleanTitle = title
     ? title
         .toLowerCase()
@@ -28,54 +28,34 @@ export const generateProductUrl = (
         .replace(/^-|-$/g, '')
     : 'tour';
 
-  // Use a direct, reliable product URL format that works consistently
-  // This is the most reliable URL format for Viator products
-  return `https://www.viator.com/tours/${productCode}`;
+  const cleanDestinationName = destinationName
+    ? destinationName
+        .toLowerCase()
+        .trim()
+        .replace(/[áäâàãå]/g, 'a')
+        .replace(/[éëêè]/g, 'e')
+        .replace(/[íïîì]/g, 'i')
+        .replace(/[óöôòõø]/g, 'o')
+        .replace(/[úüûù]/g, 'u')
+        .replace(/ñ/g, 'n')
+        .replace(/ç/g, 'c')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+    : 'destination';
+
+  // URL con formato correcto de Viator
+  // Formato: https://www.viator.com/tours/[destination]/[product-title]/d[destinationId]-[productCode]
+  if (destinationId && cleanDestinationName) {
+    return `https://www.viator.com/es-ES/tours/${cleanDestinationName}/${cleanTitle}/d${destinationId}-${productCode}`;
+  }
+
+  // Fallback cuando no tenemos destinationId - formato simplificado que igual funciona
+  return `https://www.viator.com/es-ES/tours/${productCode}`;
 };
 
-// Function to get a reliable image URL from Viator product data
-const getReliableImageUrl = (product) => {
-  // Try various possible image sources in order of reliability
-
-  // 1. Try the primary image URL if available
-  if (product.primaryImageUrl && product.primaryImageUrl.startsWith('http')) {
-    return product.primaryImageUrl;
-  }
-
-  // 2. Try the first image from the images array with proper variants
-  if (product.images && product.images.length > 0) {
-    // Try to find medium-sized variant around 400px height
-    const mediumVariant = product.images[0].variants?.find(
-      (v) => v.height >= 300 && v.height <= 500 && v.url?.startsWith('http')
-    );
-
-    if (mediumVariant?.url) {
-      return mediumVariant.url;
-    }
-
-    // If no medium variant, try any available variant
-    const anyVariant = product.images[0].variants?.[0]?.url;
-    if (anyVariant && anyVariant.startsWith('http')) {
-      return anyVariant;
-    }
-  }
-
-  // 3. Check if there's a thumbnailURL or thumbnailHiResURL
-  if (
-    product.thumbnailHiResURL &&
-    product.thumbnailHiResURL.startsWith('http')
-  ) {
-    return product.thumbnailHiResURL;
-  }
-
-  if (product.thumbnailURL && product.thumbnailURL.startsWith('http')) {
-    return product.thumbnailURL;
-  }
-
-  // 4. Use a reliable image placeholder (Placehold.co instead of placeholder.com)
-  return 'https://placehold.co/400x300/eee/999?text=Tour+Image';
-};
-// Function to generate hardcoded tours when everything else fails
+// Función para generar tours hardcodeados para casos en que todo lo demás falle
 const getHardcodedToursForCity = (cityName, destinationId) => {
   console.log(`Generando tours hardcodeados para ${cityName}`);
 
@@ -201,14 +181,9 @@ const getHardcodedToursForCity = (cityName, destinationId) => {
     ];
   }
 
-  // Add backup image URLs and generate proper product URLs
+  // Añadir URLs de productos a todos los tours
   return tours.map((tour) => ({
     ...tour,
-    // Add backup image in case primary fails
-    photoUrl:
-      tour.photoUrl || 'https://placehold.co/400x300/eee/999?text=Tour+Image',
-    backupPhotoUrl: 'https://placehold.co/400x300/eee/999?text=Tour+Image',
-    // Generate proper Viator URL
     productUrl: generateProductUrl(
       tour.productCode,
       tour.title,
@@ -218,115 +193,105 @@ const getHardcodedToursForCity = (cityName, destinationId) => {
   }));
 };
 
-// Improved helper function to map products to standard format with better reliability
+// Función mejorada para obtener URL de imágenes confiables
+const getReliableImageUrl = (product) => {
+  if (!product) return null;
+
+  // 1. Intentar la URL principal de imagen
+  if (product.primaryImageUrl && product.primaryImageUrl.startsWith('http')) {
+    return product.primaryImageUrl;
+  }
+
+  // 2. Buscar en el array de imágenes con variantes correctas
+  if (product.images && product.images.length > 0) {
+    for (const image of product.images) {
+      if (image.variants && image.variants.length) {
+        // Intentar encontrar una variante de tamaño medio
+        const mediumVariant = image.variants.find(
+          (v) => v.height >= 300 && v.height <= 500 && v.url?.startsWith('http')
+        );
+
+        if (mediumVariant?.url) {
+          return mediumVariant.url;
+        }
+
+        // Si no hay variante de tamaño medio, usar la primera disponible
+        for (const variant of image.variants) {
+          if (variant.url && variant.url.startsWith('http')) {
+            return variant.url;
+          }
+        }
+      }
+    }
+  }
+
+  // 3. Verificar otras propiedades de imagen que pudieran existir
+  if (
+    product.thumbnailHiResURL &&
+    product.thumbnailHiResURL.startsWith('http')
+  ) {
+    return product.thumbnailHiResURL;
+  }
+
+  if (product.thumbnailURL && product.thumbnailURL.startsWith('http')) {
+    return product.thumbnailURL;
+  }
+
+  return null;
+};
+
+// Función para mapear productos al formato estándar de la aplicación
 const mapProductsToStandardFormat = (
   products,
   destinationName,
   destinationId
 ) => {
   return products
-    .filter((product) => product.productCode)
+    .filter((product) => product.productCode && product.title)
     .map((product) => {
-      // Make sure we have a valid product code
-      const productCode = product.productCode || '';
+      // Obtener URL de imagen más confiable
+      const photoUrl =
+        getReliableImageUrl(product) ||
+        product.images?.[0]?.variants?.[0]?.url ||
+        '';
 
-      // Get a reliable title
-      const title =
-        product.title ||
-        product.shortTitle ||
-        'Tour en ' + (destinationName || 'destino');
-
-      // Generate the product URL early so we can validate it
-      const productUrl = generateProductUrl(
-        productCode,
-        title,
-        destinationName,
-        destinationId
-      );
-
-      // Get the best available image URL
-      const photoUrl = getReliableImageUrl(product);
-
-      // Calculate display price with sensible defaults
-      const priceAmount =
-        product.pricing?.summary?.fromPrice ||
-        product.price?.fromPrice ||
-        product.fromPrice ||
-        0;
-
-      const priceCurrency =
-        product.pricing?.summary?.currencyCode ||
-        product.price?.currencyCode ||
-        'USD';
-
-      // Get rating information
-      const rating =
-        product.reviews?.combinedAverageRating ||
-        product.reviews?.overallRating ||
-        product.rating ||
-        4.0;
-
-      const reviewCount =
-        product.reviews?.totalReviews ||
-        product.reviews?.numReviews ||
-        product.reviewCount ||
-        0;
-
-      // Get duration information
-      const duration = product.duration?.description || product.duration || '';
-
-      // Location information
-      let location = '';
-      if (product.location?.city && product.location?.country) {
-        location = `${product.location.city}, ${product.location.country}`;
-      } else if (destinationName) {
-        location = destinationName;
-      }
-
-      // Return the standardized product format with all the extracted data
       return {
-        productCode,
-        title,
-        description:
-          product.shortDescription ||
-          product.description ||
-          `Explora ${destinationName || 'este destino'} con esta increíble experiencia.`,
+        productCode: product.productCode,
+        title: product.title,
+        description: product.shortDescription || product.description || '',
         price: {
-          amount: priceAmount,
-          currency: priceCurrency,
+          amount: product.pricing?.summary?.fromPrice || 0,
+          currency: product.pricing?.summary?.currencyCode || 'USD',
         },
-        rating,
-        reviewCount,
+        rating: product.reviews?.combinedAverageRating || 0,
+        reviewCount: product.reviews?.totalReviews || 0,
         photoUrl,
-        // Add a backup image that's less likely to fail
-        backupPhotoUrl: 'https://placehold.co/400x300/eee/999?text=Tour+Image',
-        duration,
-        location,
-        productUrl,
-        // Store the raw destinationId for reference
-        destinationId: destinationId || product.destinationId || 0,
-        // Store the raw destination name for reference
-        destinationName: destinationName || '',
+        duration: product.duration?.description || '',
+        location: [product.location?.city, product.location?.country]
+          .filter(Boolean)
+          .join(', '),
+        productUrl: generateProductUrl(
+          product.productCode,
+          product.title,
+          destinationName,
+          destinationId
+        ),
       };
     });
 };
+
 // Obtener lista de destinos
 export const getDestinations = async () => {
   try {
     console.log('Obteniendo lista de destinos...');
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
     const response = await fetch('/viator/destinations', {
       method: 'GET',
       headers: {
         Accept: 'application/json;version=2.0',
         'Accept-Language': 'es-ES',
       },
-      signal: controller.signal,
+      signal: AbortSignal.timeout(20000), // 20 segundos de timeout
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`Error fetching destinations: ${response.status}`);
@@ -341,7 +306,7 @@ export const getDestinations = async () => {
   }
 };
 
-// Improved search destinations function with more reliable results
+// Buscar destinos según término de búsqueda
 export const searchDestinations = async (searchTerm) => {
   try {
     if (!searchTerm || searchTerm.trim().length < 2) {
@@ -351,10 +316,13 @@ export const searchDestinations = async (searchTerm) => {
 
     console.log(`Buscando destinos para: "${searchTerm}"`);
 
-    // Comprehensive predefined destinations list
+    // SOLUCIÓN TEMPORAL: Usar destinos predefinidos mientras solucionamos la API
+    const lowerSearchTerm = searchTerm.toLowerCase().trim();
+
+    // Lista de destinos predefinidos para búsquedas comunes
     const predefinedDestinations = [
       {
-        terms: ['paris', 'francia', 'france', 'parí'],
+        terms: ['paris', 'francia', 'france'],
         destination: {
           destinationId: 732,
           name: 'Paris',
@@ -363,7 +331,7 @@ export const searchDestinations = async (searchTerm) => {
         },
       },
       {
-        terms: ['barcelona', 'españa', 'spain', 'barça', 'barca', 'barsa'],
+        terms: ['barcelona', 'españa', 'spain'],
         destination: {
           destinationId: 684,
           name: 'Barcelona',
@@ -372,7 +340,7 @@ export const searchDestinations = async (searchTerm) => {
         },
       },
       {
-        terms: ['madrid', 'españa', 'spain', 'madrí'],
+        terms: ['madrid', 'españa', 'spain'],
         destination: {
           destinationId: 662,
           name: 'Madrid',
@@ -381,14 +349,7 @@ export const searchDestinations = async (searchTerm) => {
         },
       },
       {
-        terms: [
-          'london',
-          'londres',
-          'reino unido',
-          'uk',
-          'england',
-          'inglaterra',
-        ],
+        terms: ['london', 'londres', 'reino unido', 'uk', 'england'],
         destination: {
           destinationId: 687,
           name: 'London',
@@ -433,7 +394,7 @@ export const searchDestinations = async (searchTerm) => {
         },
       },
       {
-        terms: ['buenos aires', 'argentina', 'baires', 'capital federal'],
+        terms: ['buenos aires', 'argentina'],
         destination: {
           destinationId: 30603,
           name: 'Buenos Aires',
@@ -459,77 +420,24 @@ export const searchDestinations = async (searchTerm) => {
           location: { city: 'Cape Town', country: 'South Africa' },
         },
       },
-      // Add more popular destinations
-      {
-        terms: ['amsterdam', 'holanda', 'países bajos', 'netherlands'],
-        destination: {
-          destinationId: 525,
-          name: 'Amsterdam',
-          type: 'CITY',
-          location: { city: 'Amsterdam', country: 'Netherlands' },
-        },
-      },
-      {
-        terms: ['berlin', 'berlín', 'alemania', 'germany'],
-        destination: {
-          destinationId: 511,
-          name: 'Berlin',
-          type: 'CITY',
-          location: { city: 'Berlin', country: 'Germany' },
-        },
-      },
-      {
-        terms: ['atenas', 'athens', 'grecia', 'greece'],
-        destination: {
-          destinationId: 496,
-          name: 'Athens',
-          type: 'CITY',
-          location: { city: 'Athens', country: 'Greece' },
-        },
-      },
-      {
-        terms: ['bangkok', 'tailandia', 'thailand'],
-        destination: {
-          destinationId: 344,
-          name: 'Bangkok',
-          type: 'CITY',
-          location: { city: 'Bangkok', country: 'Thailand' },
-        },
-      },
     ];
 
-    const lowerSearchTerm = searchTerm.toLowerCase().trim();
-
-    // First check for exact matches
-    const exactMatches = predefinedDestinations.filter((item) =>
-      item.terms.some((term) => term === lowerSearchTerm)
-    );
-
-    if (exactMatches.length > 0) {
-      console.log(
-        `Se encontraron ${exactMatches.length} destinos con coincidencia exacta`
-      );
-      return exactMatches.map((match) => match.destination);
+    // Buscar coincidencias en nuestros destinos predefinidos
+    const matchingDestinations = [];
+    for (const item of predefinedDestinations) {
+      if (item.terms.some((term) => lowerSearchTerm.includes(term))) {
+        matchingDestinations.push(item.destination);
+      }
     }
 
-    // Then check for partial matches
-    const partialMatches = predefinedDestinations.filter((item) =>
-      item.terms.some(
-        (term) =>
-          lowerSearchTerm.includes(term) || term.includes(lowerSearchTerm)
-      )
-    );
-
-    if (partialMatches.length > 0) {
+    if (matchingDestinations.length > 0) {
       console.log(
-        `Se encontraron ${partialMatches.length} destinos con coincidencia parcial`
+        `Se encontraron ${matchingDestinations.length} destinos predefinidos`
       );
-      return partialMatches.map((match) => match.destination);
+      return matchingDestinations;
     }
-
-    // If no matches in predefined list, try with the API with timeout protection
+    // Si no encontramos coincidencias predefinidas, intentamos con la API
     try {
-      console.log('No se encontraron destinos predefinidos, intentando API...');
       const params = new URLSearchParams({
         searchTerm: searchTerm.trim(),
         includeDetails: 'true',
@@ -539,19 +447,14 @@ export const searchDestinations = async (searchTerm) => {
       const url = `/viator/destinations/search?${params.toString()}`;
       console.log(`Enviando solicitud a: ${url}`);
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           Accept: 'application/json;version=2.0',
           'Accept-Language': 'es-ES',
         },
-        signal: controller.signal,
+        signal: AbortSignal.timeout(20000), // 20 segundos de timeout
       });
-
-      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Error searching destinations: ${response.status}`);
@@ -560,7 +463,7 @@ export const searchDestinations = async (searchTerm) => {
       const data = await response.json();
 
       if (!data.destinations || data.destinations.length === 0) {
-        console.warn('No se encontraron destinos en la API');
+        console.warn('No se encontraron destinos');
         return [];
       }
 
@@ -568,26 +471,15 @@ export const searchDestinations = async (searchTerm) => {
       return destinations;
     } catch (apiError) {
       console.error('Error en la API de destinos:', apiError);
-
-      // As a last resort, try to create a generic destination based on the search term
-      return [
-        {
-          destinationId: parseInt(Math.random() * 10000), // Generate random ID for generic destination
-          name: searchTerm.trim(),
-          type: 'CITY',
-          location: {
-            city: searchTerm.trim(),
-            country: 'Global',
-          },
-        },
-      ];
+      return []; // Devolver vacío si la API falla
     }
   } catch (error) {
     console.error('Error en búsqueda de destinos:', error);
     return []; // Devolver array vacío para mejorar experiencia de usuario
   }
 };
-// Improved function to get destination products with better error handling and fallbacks
+
+// Obtener productos de destinos con soporte para filtros y globalidad
 export const getDestinationProducts = async ({
   destinationId = 732,
   destinationName = 'Global',
@@ -601,22 +493,19 @@ export const getDestinationProducts = async ({
       `Buscando tours para destino: ${destinationName} (ID: ${destinationId})`
     );
 
-    // Tracking successful strategies for analytics
-    let successfulStrategy = 'none';
-
-    // Improved strategies with better error handling and retry logic
+    // Implementar estrategia de múltiples intentos con diferentes enfoques
     const strategies = [
-      // Strategy 1: Use destination search with product codes
+      // Estrategia 1: Usar formato simplificado para productos/búsqueda
       async () => {
         console.log(
-          `Estrategia 1: Búsqueda por destino para ${destinationName}`
+          `Estrategia 1: Búsqueda simplificada para ${destinationName}`
         );
 
         const currentDate = new Date();
         const futureDate = new Date(currentDate);
-        futureDate.setDate(currentDate.getDate() + 90); // Look ahead 90 days
+        futureDate.setDate(currentDate.getDate() + 90);
 
-        // Format dates as YYYY-MM-DD
+        // Formato YYYY-MM-DD
         const formattedToday = currentDate.toISOString().split('T')[0];
         const formattedFuture = futureDate.toISOString().split('T')[0];
 
@@ -637,7 +526,7 @@ export const getDestinationProducts = async ({
           currencyCode: 'USD',
         };
 
-        // Apply optional filters if provided
+        // Añadir filtros opcionales si se proporcionan
         if (priceRange) {
           searchRequest.filtering.price = {
             min: priceRange.min || 0,
@@ -649,60 +538,50 @@ export const getDestinationProducts = async ({
           searchRequest.filtering.rating = rating;
         }
 
+        if (duration) {
+          searchRequest.filtering.duration = duration;
+        }
+
         console.log(
           `Request para products/search:`,
           JSON.stringify(searchRequest)
         );
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        const response = await fetch('/viator/products/search', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json;version=2.0',
+            'Content-Type': 'application/json',
+            'Accept-Language': 'es-ES',
+          },
+          body: JSON.stringify(searchRequest),
+          signal: AbortSignal.timeout(15000),
+        });
 
-        try {
-          const response = await fetch('/viator/products/search', {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json;version=2.0',
-              'Content-Type': 'application/json',
-              'Accept-Language': 'es-ES',
-            },
-            body: JSON.stringify(searchRequest),
-            signal: controller.signal,
-          });
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
 
-          clearTimeout(timeoutId);
+        const data = await response.json();
 
-          if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-          }
-
-          const data = await response.json();
-
-          if (!data.products || data.products.length === 0) {
-            console.warn('No products found in response');
-            return null;
-          }
-
-          successfulStrategy = 'products-search';
-          return mapProductsToStandardFormat(
-            data.products,
-            destinationName,
-            destinationId
-          );
-        } catch (err) {
-          console.error('Error in strategy 1:', err);
+        if (!data.products || data.products.length === 0) {
+          console.warn('No products found in response');
           return null;
         }
+
+        return mapProductsToStandardFormat(
+          data.products,
+          destinationName,
+          destinationId
+        );
       },
 
-      // Strategy 2: Use the freetext search endpoint with destination name
+      // Estrategia 2: Usar búsqueda de texto libre
       async () => {
-        console.log(
-          `Estrategia 2: Búsqueda de texto libre para ${destinationName}`
-        );
+        console.log(`Estrategia 2: Búsqueda de texto para ${destinationName}`);
 
-        const cleanSearchTerm = destinationName.trim();
         const params = new URLSearchParams({
-          text: cleanSearchTerm,
+          text: destinationName,
           start: 1,
           count: limit,
           currencyCode: 'USD',
@@ -712,77 +591,102 @@ export const getDestinationProducts = async ({
         const url = `/viator/search/freetext?${params.toString()}`;
         console.log(`Enviando solicitud a: ${url}`);
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json;version=2.0',
+            'Accept-Language': 'es-ES',
+          },
+          signal: AbortSignal.timeout(15000),
+        });
 
-        try {
-          const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-              Accept: 'application/json;version=2.0',
-              'Accept-Language': 'es-ES',
-            },
-            signal: controller.signal,
-          });
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
 
-          clearTimeout(timeoutId);
+        const data = await response.json();
 
-          if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-          }
-
-          const data = await response.json();
-
-          if (!data.data || data.data.length === 0) {
-            console.warn('No results found in freetext search');
-            return null;
-          }
-
-          successfulStrategy = 'freetext-search';
-
-          // Map the freetext search results to standard format
-          return data.data
-            .filter((item) => item.productCode)
-            .map((item) => ({
-              productCode: item.productCode,
-              title: item.title || `Tour en ${destinationName}`,
-              description: item.shortDescription || item.description || '',
-              price: {
-                amount: item.price?.fromPrice || 0,
-                currency: item.price?.currencyCode || 'USD',
-              },
-              rating: item.reviews?.combinedRating || 0,
-              reviewCount: item.reviews?.totalReviews || 0,
-              photoUrl: item.primaryImageUrl || '',
-              backupPhotoUrl:
-                'https://placehold.co/400x300/eee/999?text=Tour+Image',
-              duration: item.duration || '',
-              location: item.location || destinationName,
-              productUrl: generateProductUrl(
-                item.productCode,
-                item.title,
-                destinationName,
-                destinationId
-              ),
-              destinationId: destinationId,
-              destinationName: destinationName,
-            }));
-        } catch (err) {
-          console.error('Error in strategy 2:', err);
+        if (!data.data || data.data.length === 0) {
+          console.warn('No results found in freetext search');
           return null;
         }
+
+        return data.data
+          .filter((item) => item.productCode)
+          .map((item) => ({
+            productCode: item.productCode,
+            title: item.title,
+            description: item.shortDescription || item.description || '',
+            price: {
+              amount: item.price?.fromPrice || 0,
+              currency: item.price?.currencyCode || 'USD',
+            },
+            rating: item.reviews?.combinedRating || 0,
+            reviewCount: item.reviews?.totalReviews || 0,
+            photoUrl: item.primaryImageUrl || '',
+            duration: item.duration || '',
+            location: item.location || destinationName,
+            productUrl: generateProductUrl(
+              item.productCode,
+              item.title,
+              destinationName,
+              destinationId
+            ),
+          }));
       },
 
-      // Strategy 3: For specific cities, use hardcoded data as fallback
+      // Estrategia 3: Intentar con endpoint de featured products (productos destacados)
       async () => {
         console.log(
-          `Estrategia 3: Usar datos preprogramados para ${destinationName}`
+          `Estrategia 3: Productos destacados para ${destinationName}`
+        );
+
+        const params = new URLSearchParams({
+          destinationId: destinationId,
+          topX: limit,
+          currencyCode: 'USD',
+        });
+
+        const url = `/viator/products/featured?${params.toString()}`;
+        console.log(`Enviando solicitud a: ${url}`);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json;version=2.0',
+            'Accept-Language': 'es-ES',
+          },
+          signal: AbortSignal.timeout(15000),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.products || data.products.length === 0) {
+          console.warn('No products found in featured response');
+          return null;
+        }
+
+        return mapProductsToStandardFormat(
+          data.products,
+          destinationName,
+          destinationId
+        );
+      },
+
+      // Estrategia 4: Para ciudades específicas, usar datos preprogramados
+      async () => {
+        console.log(
+          `Estrategia 4: Usar datos preprogramados para ${destinationName}`
         );
         return getHardcodedToursForCity(destinationName, destinationId);
       },
     ];
 
-    // Try each strategy until one works
+    // Probar cada estrategia hasta que una funcione
     for (let i = 0; i < strategies.length; i++) {
       try {
         const result = await strategies[i]();
@@ -797,7 +701,7 @@ export const getDestinationProducts = async ({
       }
     }
 
-    // If we reach here, no strategy worked
+    // Si llegamos aquí, ninguna estrategia funcionó
     console.log(
       `Todas las estrategias fallaron para ${destinationName}, usando respaldo genérico`
     );
@@ -807,6 +711,7 @@ export const getDestinationProducts = async ({
     return getHardcodedToursForCity(destinationName, destinationId);
   }
 };
+
 // Obtener los mejores tours de una lista de destinos
 export const getTopToursFromDestinations = async (
   destinations = [],
@@ -851,14 +756,6 @@ export const getTopToursFromDestinations = async (
         console.warn(`Error fetching tours for ${dest.name}:`, err);
         // Continuar con el siguiente destino
       }
-
-      // Si ya tenemos suficientes tours, podemos parar
-      if (allTours.length >= 24) {
-        console.log(
-          `Ya tenemos ${allTours.length} tours, detener búsqueda adicional`
-        );
-        break;
-      }
     }
 
     // Si tenemos muy pocos tours, probar con destinos de respaldo
@@ -869,7 +766,6 @@ export const getTopToursFromDestinations = async (
         { destinationId: 662, name: 'Madrid' },
         { destinationId: 687, name: 'London' },
         { destinationId: 546, name: 'Rome' },
-        { destinationId: 712, name: 'New York' },
       ];
 
       console.log(
@@ -920,21 +816,82 @@ export const getTopToursFromDestinations = async (
       }
     }
 
-    // Si aún no tenemos tours, devolver un array vacío
-    if (allTours.length === 0) {
-      console.warn('No se pudieron obtener tours de ningún destino');
-      return [];
+    // Si aún no tenemos suficientes tours, intentar obtener tours destacados globales
+    if (allTours.length < 8) {
+      try {
+        console.log('Intentando obtener tours destacados globales');
+
+        const response = await fetch('/viator/products/featured', {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json;version=2.0',
+            'Accept-Language': 'es-ES',
+          },
+          signal: AbortSignal.timeout(10000),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.products && data.products.length > 0) {
+            console.log(
+              `Obtenidos ${data.products.length} tours destacados globales`
+            );
+
+            // Procesar solo los productos que no tengamos ya
+            for (const product of data.products) {
+              if (!uniqueProductCodes.has(product.productCode)) {
+                uniqueProductCodes.add(product.productCode);
+
+                // Para tours globales, intentar obtener el destinationId y name
+                const destinationId = product.destinationId || 0;
+                const destinationName = product.location?.city || 'Global';
+
+                allTours.push({
+                  productCode: product.productCode,
+                  title: product.title,
+                  description:
+                    product.shortDescription || product.description || '',
+                  price: {
+                    amount: product.pricing?.summary?.fromPrice || 0,
+                    currency: product.pricing?.summary?.currencyCode || 'USD',
+                  },
+                  rating: product.reviews?.combinedAverageRating || 0,
+                  reviewCount: product.reviews?.totalReviews || 0,
+                  photoUrl: getReliableImageUrl(product) || '',
+                  duration: product.duration?.description || '',
+                  location: [product.location?.city, product.location?.country]
+                    .filter(Boolean)
+                    .join(', '),
+                  productUrl: generateProductUrl(
+                    product.productCode,
+                    product.title,
+                    destinationName,
+                    destinationId
+                  ),
+                  destinationId,
+                  destinationName,
+                });
+
+                // Detenerse si ya tenemos suficientes tours
+                if (allTours.length >= 8) break;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Error obteniendo tours destacados globales:', err);
+      }
     }
 
-    // Ordenar por calificación y luego por número de reseñas
+    // Ordenar por calificación y limitar a 8 tours
     const sortedTours = allTours
       .sort((a, b) => {
-        // Primero por calificación
+        // Primero ordenar por calificación
         if (b.rating !== a.rating) return b.rating - a.rating;
         // Si tienen la misma calificación, ordenar por número de reseñas
         return b.reviewCount - a.reviewCount;
       })
-      .slice(0, 8); // Limitar a 8 tours
+      .slice(0, 8);
 
     console.log(`Returning ${sortedTours.length} unique sorted tours`);
     return sortedTours;
@@ -943,41 +900,15 @@ export const getTopToursFromDestinations = async (
     return [];
   }
 };
-// Función para verificar si una URL de imagen es válida
-export const checkImageUrl = async (url) => {
-  if (!url || !url.startsWith('http')) {
-    return false;
-  }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-    const response = await fetch(url, {
-      method: 'HEAD',
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    return response.ok;
-  } catch (error) {
-    console.warn(`Error checking image URL ${url}:`, error);
-    return false;
-  }
-};
-
-// Función para obtener información detallada de un producto específico
+// Función para obtener detalles específicos de un producto
 export const getProductDetails = async (productCode) => {
   try {
     if (!productCode) {
-      throw new Error('No se proporcionó código de producto');
+      throw new Error('No product code provided');
     }
 
-    console.log(`Obteniendo detalles para el producto: ${productCode}`);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    console.log(`Getting details for product: ${productCode}`);
 
     const response = await fetch(`/viator/products/${productCode}`, {
       method: 'GET',
@@ -985,62 +916,134 @@ export const getProductDetails = async (productCode) => {
         Accept: 'application/json;version=2.0',
         'Accept-Language': 'es-ES',
       },
-      signal: controller.signal,
+      signal: AbortSignal.timeout(15000),
     });
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
-      throw new Error(`Error fetching product details: ${response.status}`);
+      throw new Error(`Failed to get product details: ${response.status}`);
     }
 
-    const productData = await response.json();
+    const product = await response.json();
 
-    // Si no tenemos datos válidos, lanzar error
-    if (!productData || !productData.productCode) {
-      throw new Error('Datos de producto no válidos recibidos de la API');
+    if (!product || !product.productCode) {
+      throw new Error('Invalid product data received');
     }
 
-    // Formatear el producto según nuestro estándar
+    // Format the product details
     return {
-      productCode: productData.productCode,
-      title: productData.title,
-      description:
-        productData.description || productData.shortDescription || '',
-      highlights: productData.highlights || [],
-      itinerary: productData.itinerary || [],
+      productCode: product.productCode,
+      title: product.title,
+      description: product.description || product.shortDescription || '',
+      highlights: product.highlights || [],
+      itinerary: product.itinerary || [],
       price: {
-        amount: productData.pricing?.summary?.fromPrice || 0,
-        currency: productData.pricing?.summary?.currencyCode || 'USD',
+        amount: product.pricing?.summary?.fromPrice || 0,
+        currency: product.pricing?.summary?.currencyCode || 'USD',
       },
-      rating: productData.reviews?.combinedAverageRating || 0,
-      reviewCount: productData.reviews?.totalReviews || 0,
-      photoUrl: getReliableImageUrl(productData),
-      backupPhotoUrl: 'https://placehold.co/400x300/eee/999?text=Tour+Image',
-      duration: productData.duration?.description || '',
+      rating: product.reviews?.combinedAverageRating || 0,
+      reviewCount: product.reviews?.totalReviews || 0,
+      photoUrl: getReliableImageUrl(product) || '',
+      duration: product.duration?.description || '',
       location:
-        productData.location?.city && productData.location?.country
-          ? `${productData.location.city}, ${productData.location.country}`
+        product.location?.city && product.location?.country
+          ? `${product.location.city}, ${product.location.country}`
           : '',
       productUrl: generateProductUrl(
-        productData.productCode,
-        productData.title,
-        productData.location?.city,
-        productData.destinationId
+        product.productCode,
+        product.title,
+        product.location?.city,
+        product.destinationId
       ),
-      additionalImages: (productData.images || [])
-        .slice(1, 6)
-        .map(
-          (img) =>
-            img.variants?.find((v) => v.height >= 300 && v.height <= 500)
-              ?.url ||
-            img.variants?.[0]?.url ||
-            ''
-        )
-        .filter((url) => url && url.startsWith('http')),
+      destinationId: product.destinationId,
+      destinationName: product.location?.city || '',
+      additionalImages: (product.images || [])
+        .slice(0, 5)
+        .map((img) => getReliableImageUrl({ images: [img] }) || '')
+        .filter((url) => url),
     };
   } catch (error) {
     console.error('Error getting product details:', error);
     throw error;
+  }
+};
+
+// Helper function para convertir un objeto de parámetros a string de query
+export const paramsToQueryString = (params) => {
+  return Object.keys(params)
+    .filter((key) => params[key] !== undefined && params[key] !== null)
+    .map(
+      (key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`
+    )
+    .join('&');
+};
+
+// Función para buscar tours por texto libre con opciones avanzadas
+export const searchToursByText = async (searchText, options = {}) => {
+  try {
+    if (!searchText || searchText.trim().length < 2) {
+      console.log('Search text too short');
+      return [];
+    }
+
+    const params = {
+      text: searchText.trim(),
+      start: options.start || 1,
+      count: options.limit || 20,
+      currencyCode: options.currency || 'USD',
+      sortOrder: options.sortOrder || 'TOP_RATED',
+      ...options.additionalParams,
+    };
+
+    const url = `/viator/search/freetext?${paramsToQueryString(params)}`;
+    console.log(`Searching tours with text: "${searchText}", URL: ${url}`);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json;version=2.0',
+        'Accept-Language': 'es-ES',
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      console.error(`Error in search: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+
+    if (!data.data || data.data.length === 0) {
+      console.log('No tours found for the search');
+      return [];
+    }
+
+    console.log(`Found ${data.data.length} tours for search "${searchText}"`);
+
+    // Convert the results to our standard format
+    return data.data.map((item) => ({
+      productCode: item.productCode,
+      title: item.title,
+      description: item.shortDescription || '',
+      price: {
+        amount: item.price?.fromPrice || 0,
+        currency: item.price?.currencyCode || 'USD',
+      },
+      rating: item.reviews?.combinedRating || 0,
+      reviewCount: item.reviews?.totalReviews || 0,
+      photoUrl: item.primaryImageUrl || '',
+      duration: item.duration || '',
+      location: item.location || '',
+      productUrl: generateProductUrl(
+        item.productCode,
+        item.title,
+        item.location,
+        item.destinationId
+      ),
+      destinationId: item.destinationId,
+    }));
+  } catch (error) {
+    console.error('Error searching tours by text:', error);
+    return [];
   }
 };
