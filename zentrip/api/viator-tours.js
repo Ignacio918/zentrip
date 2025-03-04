@@ -3,13 +3,19 @@ export default async function handler(req, res) {
   let apiPath = '';
   let queryParams = '';
 
-  // Obtener la ruta después de /viator/
+  console.log('URL completa recibida:', req.url);
+
+  // Obtener la ruta después de /viator/ o /api/viator-tours/
   if (req.url.includes('?')) {
     const parts = req.url.split('?');
-    apiPath = parts[0].replace(/^\/viator\//, '');
+    apiPath = parts[0]
+      .replace(/^\/viator\//, '')
+      .replace(/^\/api\/viator-tours\//, '');
     queryParams = '?' + parts[1];
   } else {
-    apiPath = req.url.replace(/^\/viator\//, '');
+    apiPath = req.url
+      .replace(/^\/viator\//, '')
+      .replace(/^\/api\/viator-tours\//, '');
   }
 
   console.log(
