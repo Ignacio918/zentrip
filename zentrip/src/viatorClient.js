@@ -5,7 +5,7 @@
  */
 
 // Configuración general para todas las solicitudes
-const API_BASE_PATH = '/viator';
+const API_BASE_PATH = '/api/viator-tours';
 const DEFAULT_HEADERS = {
   Accept: 'application/json;version=2.0',
   'Accept-Language': 'es-ES',
