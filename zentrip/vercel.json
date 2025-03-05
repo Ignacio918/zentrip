@@ -12,18 +12,16 @@
   ],
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/get-lodgings",
-      "dest": "api/get-lodgings.js"
+      "source": "/api/get-lodgings",
+      "destination": "api/get-lodgings.js"
     },
     {
-      "src": "/api/get-tours",
-      "dest": "api/get-tours.js"
+      "source": "/api/get-tours",
+      "destination": "api/get-tours.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
