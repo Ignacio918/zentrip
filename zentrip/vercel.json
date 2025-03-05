@@ -8,13 +8,6 @@
     {
       "src": "api/get-tours.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static",
-      "config": {
-        "distDir": "dist"
-      }
     }
   ],
   "routes": [
@@ -28,7 +21,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/index.html"
+      "dest": "/index.html"
     }
   ]
 }
