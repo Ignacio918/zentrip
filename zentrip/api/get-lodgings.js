@@ -24,12 +24,26 @@ export default async function handler(req, res) {
       }
     );
 
-    const lodgings = response.data.data.list.map((item) => ({
-      name: item.listing.name,
-      price: item.pricingQuote.structuredStayDisplayPrice.primaryLine.price,
-      location: item.listing.localizedCityName,
-      link: item.listing.webURL,
-    }));
+    const lodgings = response.data.data.list.map((item) => {
+      const pricing =
+        item.pricingQuote?.structuredStayDisplayPrice?.primaryLine || {};
+      return {
+        name: item.listing.name,
+        price: pricing.price || 'N/A',
+        location: item.listing.localizedCityName || item.listing.city || 'N/A',
+        link: item.listing.webURL || 'N/A',
+        rating: item.listing.avgRatingLocalized || 'N/A',
+        coordinate: {
+          longitude: item.listing.coordinate?.longitude || 'N/A',
+          latitude: item.listing.coordinate?.latitude || 'N/A',
+        },
+        pictures: item.listing.contextualPictures
+          ? item.listing.contextualPictures
+              .map((pic) => pic.picture)
+              .slice(0, 3)
+          : ['N/A'],
+      };
+    });
 
     return res.status(200).json({
       status: true,
