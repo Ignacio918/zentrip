@@ -7,7 +7,7 @@
     },
     {
       "src": "package.json",
-      "use": "@vercel/static-build",
+      "use": "@vercel/vite",
       "config": {
         "distDir": "dist"
       }
