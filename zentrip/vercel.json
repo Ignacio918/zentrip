@@ -10,6 +10,12 @@
       "use": "@vercel/node"
     }
   ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
   "routes": [
     {
       "src": "/api/get-lodgings",
@@ -18,10 +24,6 @@
     {
       "src": "/api/get-tours",
       "dest": "api/get-tours.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
     }
   ]
 }
