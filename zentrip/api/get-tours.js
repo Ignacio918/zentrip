@@ -3,6 +3,8 @@ import axios from "axios";
 export default async function handler(req, res) {
   const { location } = req.query;
 
+  console.log("API Key in use:", process.env.RAPIDAPI_KEY_TRIPADVISOR ? "Present" : "Missing");
+
   if (!location) {
     return res.status(400).json({ error: "Location is required" });
   }
