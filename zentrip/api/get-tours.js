@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       "https://real-time-tripadvisor-scraper.p.rapidapi.com/api/v1/tours",
       {
         headers: {
-          "X-RapidAPI-Key": process.env.RAPIDAPI_KEY_TRIPADVISOR, // Añade esta variable en .env
+          "X-RapidAPI-Key": process.env.RAPIDAPI_KEY_TRIPADVISOR,
           "X-RapidAPI-Host": "real-time-tripadvisor-scraper.p.rapidapi.com",
         },
         params: {
@@ -39,7 +39,15 @@ export default async function handler(req, res) {
       data: { list: tours },
     });
   } catch (error) {
-    console.error("Error fetching tours:", error.message);
-    return res.status(500).json({ error: "Failed to fetch tours" });
+    console.error("Error fetching tours:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    return res.status(500).json({
+      error: "Failed to fetch tours",
+      details: error.message,
+      status: error.response?.status || "N/A",
+    });
   }
 }
