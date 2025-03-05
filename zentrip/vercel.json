@@ -13,12 +13,6 @@
     {
       "source": "/(.*)",
       "destination": "/index.html"
-    },
-    {
-      "source": "/(.*).js",
-      "headers": {
-        "Content-Type": "application/javascript"
-      }
     }
   ]
 }
