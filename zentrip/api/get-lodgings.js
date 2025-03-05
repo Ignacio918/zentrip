@@ -1,4 +1,3 @@
-// api/get-lodgings.js
 import axios from 'axios';
 
 export default async function handler(req, res) {
@@ -25,16 +24,20 @@ export default async function handler(req, res) {
       }
     );
 
-    const lodgings = response.data.data.map((item) => ({
-      name: item.property_name,
-      price: item.price,
-      location: item.address,
-      link: item.listing_url,
+    const lodgings = response.data.data.list.map((item) => ({
+      name: item.listing.name,
+      price: item.pricingQuote.structuredStayDisplayPrice.primaryLine.price,
+      location: item.listing.localizedCityName,
+      link: item.listing.webURL,
     }));
 
     return res.status(200).json({
+      status: true,
       message: `Found ${lodgings.length} lodgings in ${location}`,
-      results: lodgings,
+      timestamp: Date.now(),
+      data: {
+        list: lodgings,
+      },
     });
   } catch (error) {
     console.error('Error fetching Airbnb data:', error.message);
