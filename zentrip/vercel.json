@@ -1,27 +1,12 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/get-lodgings.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/get-tours.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/*.js": {
+      "runtime": "@vercel/node"
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/get-lodgings",
-      "destination": "/api/get-lodgings.js"
-    },
-    {
-      "source": "/api/get-tours",
-      "destination": "/api/get-tours.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
