@@ -14,12 +14,9 @@ export default async function handler(req, res) {
 
   try {
     const url = new URL(
-      'https://real-time-tripadvisor-scraper.p.rapidapi.com/api/v1/tours'
+      'https://real-time-tripadvisor-scraper.p.rapidapi.com/tripadvisor_restaurants_search_v2'
     );
     url.searchParams.append('location', location);
-    url.searchParams.append('currency', 'USD');
-    url.searchParams.append('lang', 'en_US');
-    url.searchParams.append('limit', '5');
 
     console.log('Request URL:', url.toString());
 
@@ -42,12 +39,13 @@ export default async function handler(req, res) {
     const data = await response.json();
     console.log('Raw data:', data);
 
+    // Ajustamos el mapeo para el formato de "restaurants" en lugar de "tours"
     const tours = data.data.map((item) => ({
       name: item.name,
-      price: item.price || 'N/A',
+      price: item.priceTypes || 'N/A', // Usamos priceTypes ya que no hay "price" directo
       rating: item.rating || 'N/A',
-      link: item.url || 'N/A',
-      image: item.images?.[0] || 'N/A',
+      link: item.link || 'N/A',
+      image: item.thumbnail || 'N/A',
     }));
 
     return res.status(200).json({
