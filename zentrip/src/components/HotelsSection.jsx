@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import fetchHotels from '../api/get-hotels';
 
 const HotelsSection = ({ initialLocation }) => {
   const [hotels, setHotels] = useState([]);
@@ -10,52 +11,6 @@ const HotelsSection = ({ initialLocation }) => {
   );
   const [searchInput, setSearchInput] = useState(initialLocation || 'Madrid');
   const [displayLimit, setDisplayLimit] = useState(8);
-
-  // Función mock de fetchHotels para permitir que la aplicación compile
-  const fetchHotels = async (location) => {
-    // Simulamos una petición de red
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Creamos datos de ejemplo
-    return [
-      {
-        name: 'Hotel Ritz Madrid',
-        price: 'USD 350',
-        rating: '4.8/5',
-        stars: '5',
-        image: 'https://placehold.co/600x400/EEE/999?text=Hotel+Ritz',
-        link: 'https://www.tripadvisor.com/Search?q=Hotel%20Ritz%20Madrid',
-        address: 'Plaza de la Lealtad 5, Madrid, España',
-      },
-      {
-        name: 'NH Collection Madrid Suecia',
-        price: 'USD 180',
-        rating: '4.5/5',
-        stars: '4',
-        image: 'https://placehold.co/600x400/EEE/999?text=NH+Collection',
-        link: 'https://www.tripadvisor.com/Search?q=NH%20Collection%20Madrid%20Suecia',
-        address: 'Calle del Marqués de Casa Riera 4, Madrid, España',
-      },
-      {
-        name: 'TÓTEM Madrid',
-        price: 'USD 200',
-        rating: '4.6/5',
-        stars: '4',
-        image: 'https://placehold.co/600x400/EEE/999?text=TOTEM+Madrid',
-        link: 'https://www.tripadvisor.com/Search?q=TOTEM%20Madrid',
-        address: 'Calle de Hermosilla 23, Madrid, España',
-      },
-      {
-        name: 'Hotel Urban',
-        price: 'USD 230',
-        rating: '4.4/5',
-        stars: '5',
-        image: 'https://placehold.co/600x400/EEE/999?text=Hotel+Urban',
-        link: 'https://www.tripadvisor.com/Search?q=Hotel%20Urban%20Madrid',
-        address: 'Carrera de San Jerónimo 34, Madrid, España',
-      },
-    ];
-  };
 
   const loadHotels = async (location) => {
     try {
@@ -150,39 +105,34 @@ const HotelsSection = ({ initialLocation }) => {
               {visibleHotels.map((hotel, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-lg shadow hover:shadow-lg transition h-full flex flex-col"
+                  className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition"
                 >
-                  <div className="p-4 flex flex-col flex-grow">
-                    <h3 className="text-xl font-semibold mb-2 line-clamp-2 h-14">
-                      {hotel.name}
-                    </h3>
-                    <div className="mb-3">
-                      {hotel.stars &&
-                        hotel.stars !== 'N/A' &&
-                        !isNaN(parseFloat(hotel.stars)) && (
-                          <p className="text-yellow-500 mb-1">
-                            {'★'.repeat(
-                              Math.round(parseFloat(hotel.stars)) || 0
-                            )}
-                          </p>
-                        )}
-                      <p className="text-gray-700 mb-1">Desde: {hotel.price}</p>
-                      <p className="text-gray-700">Rating: {hotel.rating}</p>
-                    </div>
+                  <h3 className="text-xl font-semibold mb-2 line-clamp-2">
+                    {hotel.name}
+                  </h3>
 
-                    <p className="text-gray-600 mb-2 text-sm truncate">
-                      {typeof hotel.address === 'string' &&
-                      !hotel.address.includes('{') &&
-                      !hotel.address.includes('[')
-                        ? hotel.address
-                        : `${searchLocation}, España`}
-                    </p>
+                  {hotel.stars &&
+                    hotel.stars !== 'N/A' &&
+                    !isNaN(parseFloat(hotel.stars)) && (
+                      <p className="text-yellow-500 mb-1">
+                        {'★'.repeat(Math.round(parseFloat(hotel.stars)) || 0)}
+                      </p>
+                    )}
 
-                    <div className="w-full h-48 overflow-hidden rounded mb-3 mt-auto">
+                  <p className="text-gray-700 mb-1">Desde: {hotel.price}</p>
+
+                  <p className="text-gray-700 mb-3">Rating: {hotel.rating}</p>
+
+                  <p className="text-gray-600 mb-2 text-sm truncate">
+                    {hotel.address}
+                  </p>
+
+                  {hotel.image && hotel.image !== 'N/A' && (
+                    <div className="w-full overflow-hidden rounded mb-3">
                       <img
                         src={hotel.image}
                         alt={hotel.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-40 object-cover"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src =
@@ -190,16 +140,16 @@ const HotelsSection = ({ initialLocation }) => {
                         }}
                       />
                     </div>
+                  )}
 
-                    <a
-                      href={hotel.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-auto inline-block w-full text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                    >
-                      Ver detalles
-                    </a>
-                  </div>
+                  <a
+                    href={hotel.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block w-full text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  >
+                    Ver detalles
+                  </a>
                 </div>
               ))}
             </div>

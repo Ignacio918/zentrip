@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import fetchRestaurants from '../api/get-restaurants';
 
 const RestaurantsSection = ({ initialLocation }) => {
   const [restaurants, setRestaurants] = useState([]);
@@ -10,52 +11,6 @@ const RestaurantsSection = ({ initialLocation }) => {
   );
   const [searchInput, setSearchInput] = useState(initialLocation || 'Madrid');
   const [displayLimit, setDisplayLimit] = useState(8);
-
-  // Función mock de fetchRestaurants para permitir que la aplicación compile
-  const fetchRestaurants = async (location) => {
-    // Simulamos una petición de red
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Creamos datos de ejemplo
-    return [
-      {
-        name: 'DiverXO',
-        price: '$$$',
-        rating: '4.9/5',
-        cuisine: 'Cocina creativa, Gastronomía de autor',
-        image: 'https://placehold.co/600x400/EEE/999?text=DiverXO',
-        link: 'https://www.tripadvisor.com/Search?q=DiverXO%20Madrid',
-        address: 'Calle Padre Damián 23, Madrid, España',
-      },
-      {
-        name: 'Botín',
-        price: '$$',
-        rating: '4.5/5',
-        cuisine: 'Española, Cocina tradicional',
-        image: 'https://placehold.co/600x400/EEE/999?text=Botin',
-        link: 'https://www.tripadvisor.com/Search?q=Botin%20Madrid',
-        address: 'Calle Cuchilleros 17, Madrid, España',
-      },
-      {
-        name: 'El Paraguas',
-        price: '$$$',
-        rating: '4.6/5',
-        cuisine: 'Mediterránea, Asturiana',
-        image: 'https://placehold.co/600x400/EEE/999?text=El+Paraguas',
-        link: 'https://www.tripadvisor.com/Search?q=El%20Paraguas%20Madrid',
-        address: 'Calle Jorge Juan 16, Madrid, España',
-      },
-      {
-        name: 'La Tasquita de Enfrente',
-        price: '$$$',
-        rating: '4.7/5',
-        cuisine: 'Española, Innovadora',
-        image: 'https://placehold.co/600x400/EEE/999?text=La+Tasquita',
-        link: 'https://www.tripadvisor.com/Search?q=La%20Tasquita%20de%20Enfrente%20Madrid',
-        address: 'Calle Ballesta 6, Madrid, España',
-      },
-    ];
-  };
 
   const loadRestaurants = async (location) => {
     try {
@@ -151,35 +106,32 @@ const RestaurantsSection = ({ initialLocation }) => {
               {visibleRestaurants.map((restaurant, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-lg shadow hover:shadow-lg transition h-full flex flex-col"
+                  className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition"
                 >
-                  <div className="p-4 flex flex-col flex-grow">
-                    <h3 className="text-xl font-semibold mb-2 line-clamp-2 h-14">
-                      {restaurant.name}
-                    </h3>
+                  <h3 className="text-xl font-semibold mb-2 line-clamp-2">
+                    {restaurant.name}
+                  </h3>
 
-                    <div className="mb-3">
-                      <p className="text-gray-600 mb-1 text-sm">
-                        {typeof restaurant.cuisine === 'string' &&
-                        !restaurant.cuisine.includes('{')
-                          ? restaurant.cuisine
-                          : 'Cocina Internacional'}
-                      </p>
+                  {restaurant.cuisine && (
+                    <p className="text-gray-600 mb-1 text-sm">
+                      {restaurant.cuisine}
+                    </p>
+                  )}
 
-                      <p className="text-gray-700 mb-1">
-                        Precio: {restaurant.price}
-                      </p>
+                  <p className="text-gray-700 mb-1">
+                    Precio: {restaurant.price}
+                  </p>
 
-                      <p className="text-gray-700">
-                        Rating: {restaurant.rating}
-                      </p>
-                    </div>
+                  <p className="text-gray-700 mb-3">
+                    Rating: {restaurant.rating}
+                  </p>
 
-                    <div className="w-full h-48 overflow-hidden rounded mb-3 mt-auto">
+                  {restaurant.image && restaurant.image !== 'N/A' && (
+                    <div className="w-full overflow-hidden rounded mb-3">
                       <img
                         src={restaurant.image}
                         alt={restaurant.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-40 object-cover"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src =
@@ -187,16 +139,16 @@ const RestaurantsSection = ({ initialLocation }) => {
                         }}
                       />
                     </div>
+                  )}
 
-                    <a
-                      href={restaurant.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-auto inline-block w-full text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                    >
-                      Ver detalles
-                    </a>
-                  </div>
+                  <a
+                    href={restaurant.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block w-full text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  >
+                    Ver detalles
+                  </a>
                 </div>
               ))}
             </div>
