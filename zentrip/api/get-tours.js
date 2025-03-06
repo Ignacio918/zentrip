@@ -12,11 +12,20 @@ const fetchTours = async (location) => {
     return [];
   }
 
+  // Fechas actuales (ajustadas al 5 de marzo de 2025 como base)
+  const today = new Date('2025-03-05');
+  const checkIn = today.toISOString().split('T')[0]; // "2025-03-05"
+  const checkOut = new Date(today.setDate(today.getDate() + 1))
+    .toISOString()
+    .split('T')[0]; // "2025-03-06"
+
   try {
     const url = new URL(
-      'https://real-time-tripadvisor-scraper-api.p.rapidapi.com/tripadvisor_tours_search_v2'
+      'https://real-time-tripadvisor-scraper-api.p.rapidapi.com/tripadvisor_tours_search'
     );
     url.searchParams.append('location', location);
+    url.searchParams.append('checkIn', checkIn);
+    url.searchParams.append('checkOut', checkOut);
     url.searchParams.append('currency', 'USD');
     url.searchParams.append('lang', 'en_US');
     url.searchParams.append('limit', '5');
@@ -37,7 +46,7 @@ const fetchTours = async (location) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Error response text:', errorText); // Mostrar el texto del error
+      console.error('Error response text:', errorText);
       throw new Error(`RapidAPI error: ${response.status} - ${errorText}`);
     }
 
@@ -53,11 +62,11 @@ const fetchTours = async (location) => {
       dataKeys: data.data ? Object.keys(data.data) : [],
     });
 
-    // Intentar extraer tours de diferentes estructuras posibles
+    // Extraer tours del array 'data'
     let tours = [];
     if (Array.isArray(data.data)) {
       tours = data.data.map((item) => {
-        console.log('Mapping item (array):', item);
+        console.log('Mapping item:', item);
         return {
           name: item.name || item.title || 'N/A',
           price:
@@ -67,13 +76,14 @@ const fetchTours = async (location) => {
           image: item.thumbnail || item.images?.[0] || 'N/A',
         };
       });
-    } else if (data.data && typeof data.data === 'object') {
-      // Si data.data es un objeto, buscar un array dentro (ej. results, items)
-      const possibleArrays = ['results', 'items', 'tours'];
-      for (const key of possibleArrays) {
-        if (Array.isArray(data.data[key])) {
-          tours = data.data[key].map((item) => {
-            console.log('Mapping item (object array):', item);
+    } else {
+      console.warn('data.data is not an array, checking alternatives');
+      // Intentar con otras claves posibles según la documentación
+      const possibleKeys = ['results', 'items', 'tours'];
+      for (const key of possibleKeys) {
+        if (Array.isArray(data[key])) {
+          tours = data[key].map((item) => {
+            console.log('Mapping item from alternative key:', item);
             return {
               name: item.name || item.title || 'N/A',
               price:
@@ -89,10 +99,9 @@ const fetchTours = async (location) => {
           break;
         }
       }
-      // Si no hay array, usar Object.values como fallback
-      if (tours.length === 0) {
+      if (tours.length === 0 && data.data) {
         tours = Object.values(data.data).map((item) => {
-          console.log('Mapping item (object values):', item);
+          console.log('Mapping item from Object.values:', item);
           return {
             name: item.name || item.title || 'N/A',
             price:
@@ -103,8 +112,6 @@ const fetchTours = async (location) => {
           };
         });
       }
-    } else {
-      console.warn('No valid data structure found in response');
     }
 
     console.log('Mapped tours:', tours);
