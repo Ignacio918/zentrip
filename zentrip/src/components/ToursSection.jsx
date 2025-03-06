@@ -9,7 +9,7 @@ const ToursSection = () => {
     const getTours = async () => {
       try {
         const toursData = await fetchTours('Madrid');
-        console.log('Tours data in ToursSection:', toursData); // Depuración
+        console.log('Tours data in ToursSection:', toursData);
         setTours(toursData);
       } catch (error) {
         console.error('Error in ToursSection:', error);
@@ -58,8 +58,7 @@ const ToursSection = () => {
         </div>
       ) : (
         <p className="text-center text-gray-600">
-          No hay tours disponibles en este momento o error en el formato de
-          datos.
+          No hay tours disponibles o error en el formato de datos.
         </p>
       )}
     </section>

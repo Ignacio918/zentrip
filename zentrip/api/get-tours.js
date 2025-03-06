@@ -37,24 +37,27 @@ const fetchTours = async (location) => {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Error response text:', errorText); // Mostrar el texto del error
       throw new Error(`RapidAPI error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Raw data from RapidAPI:', JSON.stringify(data, null, 2)); // JSON completo y legible
+    console.log('Raw data from RapidAPI:', JSON.stringify(data, null, 2)); // JSON completo
 
     // Depuración de la estructura
     console.log('Data structure:', {
+      isObject: typeof data === 'object' && data !== null,
       isArray: Array.isArray(data),
       hasData: !!data.data,
-      dataKeys: Object.keys(data),
+      dataIsArray: Array.isArray(data.data),
+      dataKeys: data.data ? Object.keys(data.data) : [],
     });
 
-    // Ajustar el mapeo según la estructura real
+    // Intentar extraer tours de diferentes estructuras posibles
     let tours = [];
     if (Array.isArray(data.data)) {
       tours = data.data.map((item) => {
-        console.log('Mapping item:', item);
+        console.log('Mapping item (array):', item);
         return {
           name: item.name || item.title || 'N/A',
           price:
@@ -65,17 +68,43 @@ const fetchTours = async (location) => {
         };
       });
     } else if (data.data && typeof data.data === 'object') {
-      // Si data.data es un objeto, intentamos extraer un array de resultados (ajustar según el JSON)
-      tours = Object.values(data.data).map((item) => ({
-        name: item.name || item.title || 'N/A',
-        price:
-          item.price || item.pricePerPerson || item.pricing?.adult || 'N/A',
-        rating: item.rating || item.ratingScore || 'N/A',
-        link: item.link || item.url || 'N/A',
-        image: item.thumbnail || item.images?.[0] || 'N/A',
-      }));
+      // Si data.data es un objeto, buscar un array dentro (ej. results, items)
+      const possibleArrays = ['results', 'items', 'tours'];
+      for (const key of possibleArrays) {
+        if (Array.isArray(data.data[key])) {
+          tours = data.data[key].map((item) => {
+            console.log('Mapping item (object array):', item);
+            return {
+              name: item.name || item.title || 'N/A',
+              price:
+                item.price ||
+                item.pricePerPerson ||
+                item.pricing?.adult ||
+                'N/A',
+              rating: item.rating || item.ratingScore || 'N/A',
+              link: item.link || item.url || 'N/A',
+              image: item.thumbnail || item.images?.[0] || 'N/A',
+            };
+          });
+          break;
+        }
+      }
+      // Si no hay array, usar Object.values como fallback
+      if (tours.length === 0) {
+        tours = Object.values(data.data).map((item) => {
+          console.log('Mapping item (object values):', item);
+          return {
+            name: item.name || item.title || 'N/A',
+            price:
+              item.price || item.pricePerPerson || item.pricing?.adult || 'N/A',
+            rating: item.rating || item.ratingScore || 'N/A',
+            link: item.link || item.url || 'N/A',
+            image: item.thumbnail || item.images?.[0] || 'N/A',
+          };
+        });
+      }
     } else {
-      console.warn('No valid data array found in response');
+      console.warn('No valid data structure found in response');
     }
 
     console.log('Mapped tours:', tours);
