@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import fetchRestaurants from '../../api/get-restaurants';
 
-const RestaurantsSection = () => {
+const RestaurantsSection = ({ initialLocation }) => {
   const [restaurants, setRestaurants] = useState([]);
   const [visibleRestaurants, setVisibleRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchLocation, setSearchLocation] = useState('Madrid'); // Default location
-  const [searchInput, setSearchInput] = useState('Madrid');
+  const [searchLocation, setSearchLocation] = useState(
+    initialLocation || 'Madrid'
+  ); // Usar initialLocation si está disponible
+  const [searchInput, setSearchInput] = useState(initialLocation || 'Madrid');
   const [displayLimit, setDisplayLimit] = useState(8);
 
   const loadRestaurants = async (location) => {
@@ -33,9 +35,18 @@ const RestaurantsSection = () => {
     }
   };
 
+  // Efecto para cargar restaurantes cuando cambia searchLocation
   useEffect(() => {
     loadRestaurants(searchLocation);
   }, [searchLocation]);
+
+  // Efecto para actualizar searchLocation cuando cambia initialLocation
+  useEffect(() => {
+    if (initialLocation && initialLocation !== searchLocation) {
+      setSearchLocation(initialLocation);
+      setSearchInput(initialLocation);
+    }
+  }, [initialLocation]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -62,24 +73,29 @@ const RestaurantsSection = () => {
           Restaurantes Recomendados
         </h2>
 
-        {/* Buscador */}
-        <div className="mb-8">
-          <form onSubmit={handleSearch} className="flex gap-2 max-w-md mx-auto">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Buscar restaurantes por localidad..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+        {/* Buscador - Solo mostrarlo si no está en una página específica */}
+        {!initialLocation && (
+          <div className="mb-8">
+            <form
+              onSubmit={handleSearch}
+              className="flex gap-2 max-w-md mx-auto"
             >
-              Buscar
-            </button>
-          </form>
-        </div>
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Buscar restaurantes por localidad..."
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Buscar
+              </button>
+            </form>
+          </div>
+        )}
 
         {loading && <p className="text-center">Actualizando resultados...</p>}
         {error && <p className="text-center text-red-500">Error: {error}</p>}
@@ -142,7 +158,7 @@ const RestaurantsSection = () => {
                       typeof restaurant.link === 'string' &&
                       !restaurant.link.includes('zentrip')
                         ? restaurant.link
-                        : `https://www.tripadvisor.com/Search?q=${encodeURIComponent(restaurant.name + ' restaurante Madrid')}`
+                        : `https://www.tripadvisor.com/Search?q=${encodeURIComponent(restaurant.name + ' restaurante ' + searchLocation)}`
                     }
                     target="_blank"
                     rel="noopener noreferrer"

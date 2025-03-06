@@ -8,6 +8,11 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 
+// Importamos las nuevas páginas
+import HotelsPage from './pages/HotelsPage';
+import RestaurantsPage from './pages/RestaurantsPage';
+import ToursPage from './pages/ToursPage';
+
 const ProtectedRoute = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => localStorage.getItem('isLoggedIn') === 'true'
@@ -120,6 +125,9 @@ const App = () => {
     <NavbarFooterWrapper>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/hoteles" element={<HotelsPage />} />
+        <Route path="/restaurantes" element={<RestaurantsPage />} />
+        <Route path="/tours" element={<ToursPage />} />
         <Route
           path="/login"
           element={

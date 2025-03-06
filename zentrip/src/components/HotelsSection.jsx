@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import fetchHotels from '../../api/get-hotels';
 
-const HotelsSection = () => {
+const HotelsSection = ({ initialLocation }) => {
   const [hotels, setHotels] = useState([]);
   const [visibleHotels, setVisibleHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchLocation, setSearchLocation] = useState('Madrid'); // Default location
-  const [searchInput, setSearchInput] = useState('Madrid');
+  const [searchLocation, setSearchLocation] = useState(
+    initialLocation || 'Madrid'
+  ); // Usar initialLocation si está disponible
+  const [searchInput, setSearchInput] = useState(initialLocation || 'Madrid');
   const [displayLimit, setDisplayLimit] = useState(8);
 
   const loadHotels = async (location) => {
@@ -16,47 +18,8 @@ const HotelsSection = () => {
       const hotelsData = await fetchHotels(location);
       console.log('Hotels data received:', hotelsData);
       if (Array.isArray(hotelsData)) {
-        // Aseguramos que cada hotel tenga valores string para rating, stars y price
-        const formattedHotels = hotelsData.map((hotel) => ({
-          ...hotel,
-          // Convertir rating a string si es un objeto
-          rating:
-            typeof hotel.rating === 'object'
-              ? hotel.rating.subRating
-                ? `${hotel.rating.subRating}/${hotel.rating.total || 5}`
-                : '4/5'
-              : typeof hotel.rating === 'number'
-                ? `${hotel.rating}/5`
-                : '4/5',
-          // Asegurar que stars es string
-          stars:
-            typeof hotel.stars === 'object'
-              ? String(hotel.stars.value || '4')
-              : typeof hotel.stars === 'number'
-                ? String(hotel.stars)
-                : '4',
-          // Asegurar que price es string
-          price:
-            typeof hotel.price === 'object'
-              ? `${hotel.price.currency || 'USD'} ${hotel.price.amount || hotel.price.from || '100'}`
-              : typeof hotel.price === 'string'
-                ? hotel.price
-                : 'USD N/A',
-          // Extraer dirección del JSON si es un objeto, o crear una dirección visible
-          address:
-            typeof hotel.address === 'object'
-              ? hotel.address.street
-                ? `${hotel.address.street}, ${hotel.address.city || 'Madrid'}`
-                : typeof hotel.address === 'string'
-                  ? hotel.address
-                  : 'Madrid, España'
-              : typeof hotel.address === 'string'
-                ? hotel.address
-                : 'Madrid, España',
-        }));
-
-        setHotels(formattedHotels);
-        setVisibleHotels(formattedHotels.slice(0, displayLimit));
+        setHotels(hotelsData);
+        setVisibleHotels(hotelsData.slice(0, displayLimit));
       } else {
         console.error('Hotels data is not an array:', hotelsData);
         setHotels([]);
@@ -72,9 +35,18 @@ const HotelsSection = () => {
     }
   };
 
+  // Efecto para cargar hoteles cuando cambia searchLocation
   useEffect(() => {
     loadHotels(searchLocation);
   }, [searchLocation]);
+
+  // Efecto para actualizar searchLocation cuando cambia initialLocation
+  useEffect(() => {
+    if (initialLocation && initialLocation !== searchLocation) {
+      setSearchLocation(initialLocation);
+      setSearchInput(initialLocation);
+    }
+  }, [initialLocation]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -100,24 +72,29 @@ const HotelsSection = () => {
           Hoteles Recomendados
         </h2>
 
-        {/* Buscador */}
-        <div className="mb-8">
-          <form onSubmit={handleSearch} className="flex gap-2 max-w-md mx-auto">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Buscar hoteles por localidad..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+        {/* Buscador - Solo mostrarlo si no está en una página específica */}
+        {!initialLocation && (
+          <div className="mb-8">
+            <form
+              onSubmit={handleSearch}
+              className="flex gap-2 max-w-md mx-auto"
             >
-              Buscar
-            </button>
-          </form>
-        </div>
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Buscar hoteles por localidad..."
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Buscar
+              </button>
+            </form>
+          </div>
+        )}
 
         {loading && <p className="text-center">Actualizando resultados...</p>}
         {error && <p className="text-center text-red-500">Error: {error}</p>}
@@ -142,13 +119,15 @@ const HotelsSection = () => {
                     )}
                   <p className="text-gray-700 mb-1">Desde: {hotel.price}</p>
                   <p className="text-gray-700 mb-3">Rating: {hotel.rating}</p>
+
                   <p className="text-gray-600 mb-2 text-sm truncate">
                     {typeof hotel.address === 'string' &&
                     !hotel.address.includes('{') &&
                     !hotel.address.includes('[')
                       ? hotel.address
-                      : 'Madrid, España'}
+                      : `${searchLocation}, España`}
                   </p>
+
                   <div className="w-full h-40 overflow-hidden rounded mb-3 bg-gray-200">
                     {hotel.image &&
                     hotel.image !== 'N/A' &&
@@ -172,6 +151,7 @@ const HotelsSection = () => {
                       />
                     )}
                   </div>
+
                   <a
                     href={
                       hotel.link &&
@@ -179,7 +159,7 @@ const HotelsSection = () => {
                       typeof hotel.link === 'string' &&
                       !hotel.link.includes('zentrip')
                         ? hotel.link
-                        : `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotel.name + ' Madrid')}`
+                        : `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotel.name + ' ' + searchLocation)}`
                     }
                     target="_blank"
                     rel="noopener noreferrer"
