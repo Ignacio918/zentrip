@@ -12,7 +12,7 @@ const fetchTours = async (location) => {
     return [];
   }
 
-  // Fechas actuales (ajustadas al 5 de marzo de 2025 como base)
+  // Fechas actuales (basadas en 5 de marzo de 2025)
   const today = new Date('2025-03-05');
   const checkIn = today.toISOString().split('T')[0]; // "2025-03-05"
   const checkOut = new Date(today.setDate(today.getDate() + 1))
@@ -21,7 +21,7 @@ const fetchTours = async (location) => {
 
   try {
     const url = new URL(
-      'https://real-time-tripadvisor-scraper-api.p.rapidapi.com/tripadvisor_tours_search'
+      'https://real-time-tripadvisor-scraper-api.p.rapidapi.com/tripadvisor_tours_search_v2'
     );
     url.searchParams.append('location', location);
     url.searchParams.append('checkIn', checkIn);
@@ -78,7 +78,7 @@ const fetchTours = async (location) => {
       });
     } else {
       console.warn('data.data is not an array, checking alternatives');
-      // Intentar con otras claves posibles según la documentación
+      // Intentar con otras claves posibles
       const possibleKeys = ['results', 'items', 'tours'];
       for (const key of possibleKeys) {
         if (Array.isArray(data[key])) {
