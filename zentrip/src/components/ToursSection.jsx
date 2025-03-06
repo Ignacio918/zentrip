@@ -1,32 +1,32 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect } from 'react';
+import fetchTours from '../../api/get-tours'; // Ajustá la ruta según tu estructura
 
 const ToursSection = () => {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTours = async () => {
+    const getTours = async () => {
       try {
-        const response = await axios.get(
-          "https://zentrip.vercel.app/api/get-tours?location=Madrid"
-        );
-        setTours(response.data.data.list);
+        const toursData = await fetchTours('Madrid');
+        setTours(toursData);
       } catch (error) {
-        console.error("Error fetching tours:", error);
+        console.error('Error in ToursSection:', error);
         setTours([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchTours();
+    getTours();
   }, []);
 
   if (loading) return <p>Cargando tours...</p>;
 
   return (
     <section className="py-12 bg-gray-100">
-      <h2 className="text-3xl font-bold text-center mb-8">Tours Recomendados</h2>
+      <h2 className="text-3xl font-bold text-center mb-8">
+        Tours Recomendados
+      </h2>
       {tours.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
           {tours.map((tour, index) => (
@@ -37,7 +37,7 @@ const ToursSection = () => {
               <h3 className="text-xl font-semibold">{tour.name}</h3>
               <p>Precio: {tour.price}</p>
               <p>Rating: {tour.rating}</p>
-              {tour.image !== "N/A" && (
+              {tour.image !== 'N/A' && (
                 <img
                   src={tour.image}
                   alt={tour.name}
