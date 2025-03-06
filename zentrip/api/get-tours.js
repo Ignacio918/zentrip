@@ -2,11 +2,8 @@ export default async function handler(req, res) {
   const { location } = req.query;
 
   console.log('Starting get-tours...');
-  console.log(
-    'API Key:',
-    process.env.RAPIDAPI_KEY_TRIPADVISOR ? 'Present' : 'Missing'
-  );
-  console.log('Location received:', location);
+  console.log('API Key:', process.env.RAPIDAPI_KEY_TRIPADVISOR || 'Missing');
+  console.log('Location:', location || 'Not provided');
 
   if (!location) {
     return res.status(400).json({ error: 'Location is required' });
@@ -18,7 +15,7 @@ export default async function handler(req, res) {
     );
     url.searchParams.append('location', location);
 
-    console.log('Request URL:', url.toString());
+    console.log('Requesting URL:', url.toString());
 
     const response = await fetch(url.toString(), {
       method: 'GET',
@@ -26,6 +23,7 @@ export default async function handler(req, res) {
         'X-RapidAPI-Key': process.env.RAPIDAPI_KEY_TRIPADVISOR,
         'X-RapidAPI-Host': 'real-time-tripadvisor-scraper.p.rapidapi.com',
         Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
     });
 
@@ -33,16 +31,16 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('RapidAPI error response:', errorText);
       throw new Error(`RapidAPI error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Raw data:', data);
+    console.log('Raw data from RapidAPI:', data);
 
-    // Ajustamos el mapeo para el formato de "restaurants" en lugar de "tours"
     const tours = data.data.map((item) => ({
       name: item.name,
-      price: item.priceTypes || 'N/A', // Usamos priceTypes ya que no hay "price" directo
+      price: item.priceTypes || 'N/A',
       rating: item.rating || 'N/A',
       link: item.link || 'N/A',
       image: item.thumbnail || 'N/A',
@@ -50,7 +48,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       status: true,
-      message: `Found ${tours.length} tours in ${location}`,
+      message: `Found ${tours.length} items in ${location}`,
       data: { list: tours },
     });
   } catch (error) {
