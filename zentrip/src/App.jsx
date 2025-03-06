@@ -128,22 +128,8 @@ const App = () => {
         <Route path="/hoteles" element={<HotelsPage />} />
         <Route path="/restaurantes" element={<RestaurantsPage />} />
         <Route path="/tours" element={<ToursPage />} />
-        <Route
-          path="/login"
-          element={
-            <ProtectedRoute>
-              <LoginPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <ProtectedRoute>
-              <RegisterPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/dashboard/*"
           element={
