@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import fetchTours from '../api/get-tours';
+import fetchTours from '../../api/get-hotels.js';
 
 const ToursSection = ({ initialLocation }) => {
   const [tours, setTours] = useState([]);
