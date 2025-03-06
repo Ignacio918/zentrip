@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import fetchRestaurants from '../../api/get-restaurants';
+import fetchRestaurants from '../api/get-restaurants';
 
 const RestaurantsSection = ({ initialLocation }) => {
   const [restaurants, setRestaurants] = useState([]);
