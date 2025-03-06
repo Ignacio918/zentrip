@@ -14,9 +14,12 @@ const fetchTours = async (location) => {
 
   try {
     const url = new URL(
-      'https://real-time-tripadvisor-scraper-api.p.rapidapi.com/tripadvisor_restaurants_search_v2'
+      'https://real-time-tripadvisor-scraper-api.p.rapidapi.com/tripadvisor_tours_search_v2'
     );
     url.searchParams.append('location', location);
+    url.searchParams.append('currency', 'USD'); // Opcional, ajusta según necesites
+    url.searchParams.append('lang', 'en_US'); // Opcional, ajusta según necesites
+    url.searchParams.append('limit', '5'); // Opcional, limita a 5 resultados
 
     console.log('Requesting URL:', url.toString());
 
@@ -34,18 +37,24 @@ const fetchTours = async (location) => {
 
     if (!response.ok) {
       const errorText = await response.text();
+      if (response.status === 429 && retries > 0) {
+        console.log(`429 detected, waiting ${delay}ms before retrying...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return fetchTours(location, retries - 1, delay * 2);
+      }
       throw new Error(`RapidAPI error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
     console.log('Raw data from RapidAPI:', data);
 
+    // Mapeo ajustado para tours según la documentación
     const tours = data.data.map((item) => ({
-      name: item.name,
-      price: item.priceTypes || 'N/A',
-      rating: item.rating || 'N/A',
-      link: item.link || 'N/A',
-      image: item.thumbnail || 'N/A',
+      name: item.name || item.title || 'N/A', // 'name' o 'title' según el JSON
+      price: item.price || item.pricePerPerson || item.pricing?.adult || 'N/A', // Ajusta según el campo
+      rating: item.rating || item.ratingScore || 'N/A', // Ajusta según el campo
+      link: item.link || item.url || 'N/A', // Ajusta según el campo
+      image: item.thumbnail || item.images?.[0] || 'N/A', // Ajusta según el campo
     }));
 
     return tours;
