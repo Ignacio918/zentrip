@@ -14,7 +14,7 @@ const fetchTours = async (location) => {
 
   try {
     const url = new URL(
-      'https://real-time-tripadvisor-scraper.p.rapidapi.com/tripadvisor_restaurants_search_v2'
+      'https://real-time-tripadvisor-scraper-api.p.rapidapi.com/tripadvisor_restaurants_search_v2'
     );
     url.searchParams.append('location', location);
 
@@ -24,7 +24,7 @@ const fetchTours = async (location) => {
       method: 'GET',
       headers: {
         'X-RapidAPI-Key': import.meta.env.VITE_RAPIDAPI_KEY_TRIPADVISOR,
-        'X-RapidAPI-Host': 'real-time-tripadvisor-scraper.p.rapidapi.com',
+        'X-RapidAPI-Host': 'real-time-tripadvisor-scraper-api.p.rapidapi.com',
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
