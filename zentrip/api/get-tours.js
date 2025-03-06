@@ -3,7 +3,7 @@ const fetchTours = async (location) => {
   console.log('Starting fetchTours...');
   console.log(
     'API Key:',
-    import.meta.env.VITE_RAPIDAPI_KEY_TRIPADVISOR || 'Missing'
+    import.meta.env.RAPIDAPI_KEY_TRIPADVISOR || 'Missing'
   );
   console.log('Location:', location || 'Not provided');
 
@@ -23,7 +23,7 @@ const fetchTours = async (location) => {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': import.meta.env.VITE_RAPIDAPI_KEY_TRIPADVISOR,
+        'X-RapidAPI-Key': import.meta.env.RAPIDAPI_KEY_TRIPADVISOR,
         'X-RapidAPI-Host': 'real-time-tripadvisor-scraper-api.p.rapidapi.com',
         Accept: 'application/json',
         'Content-Type': 'application/json',

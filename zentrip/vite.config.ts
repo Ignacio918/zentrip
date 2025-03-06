@@ -8,20 +8,11 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    extensions: ['.js', '.ts', '.jsx', '.tsx'], // Asegurar que resuelva .ts
+    extensions: ['.js', '.ts', '.jsx', '.tsx'],
   },
-  server: {
-    proxy: {
-      '/viator': {
-        target: 'https://api.viator.com/partner',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/viator/, ''),
-        headers: {
-          'Accept': 'application/json;version=2.0',
-          'Content-Type': 'application/json',
-        },
-      },
-    },
+  define: {
+    'import.meta.env.RAPIDAPI_KEY_TRIPADVISOR': JSON.stringify(
+      process.env.RAPIDAPI_KEY_TRIPADVISOR
+    ),
   },
 });
