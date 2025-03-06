@@ -8,7 +8,6 @@ const Chat = lazy(() => import('../components/Chat')); // Carga diferida
 import generateItinerary from '../cohereClient'; // Importamos la función
 import HotelsSection from '../components/HotelsSection';
 import RestaurantsSection from '../components/RestaurantsSection';
-import VacationRentalsSection from '../components/VacationRentalsSection';
 
 const Landing = () => {
   return (
@@ -41,8 +40,7 @@ const Landing = () => {
           {/* Espaciado prudencial de 16 unidades */}
           <ToursSection />
           <HotelsSection />
-          <RestaurantsSection />
-          <VacationRentalsSection />
+          <RestaurantsSection />          
         </div>
       </div>
     </section>

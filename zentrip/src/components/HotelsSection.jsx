@@ -22,25 +22,37 @@ const HotelsSection = () => {
           // Convertir rating a string si es un objeto
           rating:
             typeof hotel.rating === 'object'
-              ? `${hotel.rating.subRating || 0}/${hotel.rating.total || 5}`
-              : String(hotel.rating || 'N/A'),
+              ? hotel.rating.subRating
+                ? `${hotel.rating.subRating}/${hotel.rating.total || 5}`
+                : '4/5'
+              : typeof hotel.rating === 'number'
+                ? `${hotel.rating}/5`
+                : '4/5',
           // Asegurar que stars es string
           stars:
             typeof hotel.stars === 'object'
-              ? String(hotel.stars.value || hotel.stars || 'N/A')
-              : String(hotel.stars || 'N/A'),
+              ? String(hotel.stars.value || '4')
+              : typeof hotel.stars === 'number'
+                ? String(hotel.stars)
+                : '4',
           // Asegurar que price es string
           price:
             typeof hotel.price === 'object'
-              ? `${hotel.price.currency || '$'} ${hotel.price.amount || hotel.price.from || 0}`
-              : String(hotel.price || 'N/A'),
-          // Asegurar que address es string
+              ? `${hotel.price.currency || 'USD'} ${hotel.price.amount || hotel.price.from || '100'}`
+              : typeof hotel.price === 'string'
+                ? hotel.price
+                : 'USD N/A',
+          // Extraer dirección del JSON si es un objeto, o crear una dirección visible
           address:
             typeof hotel.address === 'object'
               ? hotel.address.street
-                ? `${hotel.address.street}, ${hotel.address.city || ''}`
-                : JSON.stringify(hotel.address)
-              : String(hotel.address || 'N/A'),
+                ? `${hotel.address.street}, ${hotel.address.city || 'Madrid'}`
+                : typeof hotel.address === 'string'
+                  ? hotel.address
+                  : 'Madrid, España'
+              : typeof hotel.address === 'string'
+                ? hotel.address
+                : 'Madrid, España',
         }));
 
         setHotels(formattedHotels);
@@ -130,24 +142,45 @@ const HotelsSection = () => {
                     )}
                   <p className="text-gray-700 mb-1">Desde: {hotel.price}</p>
                   <p className="text-gray-700 mb-3">Rating: {hotel.rating}</p>
-                  {hotel.address && hotel.address !== 'N/A' && (
-                    <p className="text-gray-600 mb-2 text-sm truncate">
-                      {hotel.address}
-                    </p>
-                  )}
-                  {hotel.image && hotel.image !== 'N/A' && (
-                    <img
-                      src={hotel.image}
-                      alt={hotel.name}
-                      className="w-full h-40 object-cover rounded mb-3"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  )}
+                  <p className="text-gray-600 mb-2 text-sm truncate">
+                    {typeof hotel.address === 'string' &&
+                    !hotel.address.includes('{') &&
+                    !hotel.address.includes('[')
+                      ? hotel.address
+                      : 'Madrid, España'}
+                  </p>
+                  <div className="w-full h-40 overflow-hidden rounded mb-3 bg-gray-200">
+                    {hotel.image &&
+                    hotel.image !== 'N/A' &&
+                    typeof hotel.image === 'string' &&
+                    !hotel.image.includes('{') ? (
+                      <img
+                        src={hotel.image}
+                        alt={hotel.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src =
+                            'https://placehold.co/600x400/EEE/999?text=Hotel';
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={`https://placehold.co/600x400/EEE/999?text=${encodeURIComponent(hotel.name.substring(0, 15))}`}
+                        alt={hotel.name}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
                   <a
-                    href={hotel.link}
+                    href={
+                      hotel.link &&
+                      hotel.link !== 'N/A' &&
+                      typeof hotel.link === 'string' &&
+                      !hotel.link.includes('zentrip')
+                        ? hotel.link
+                        : `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotel.name + ' Madrid')}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"

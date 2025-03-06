@@ -16,30 +16,8 @@ const RestaurantsSection = () => {
       const restaurantsData = await fetchRestaurants(location);
       console.log('Restaurants data received:', restaurantsData);
       if (Array.isArray(restaurantsData)) {
-        // Aseguramos que cada restaurante tenga valores string para rating y price
-        const formattedRestaurants = restaurantsData.map((restaurant) => ({
-          ...restaurant,
-          // Convertir rating a string si es un objeto
-          rating:
-            typeof restaurant.rating === 'object'
-              ? `${restaurant.rating.subRating || 0}/${restaurant.rating.total || 5}`
-              : String(restaurant.rating || 'N/A'),
-          // Asegurar que price es string
-          price:
-            typeof restaurant.price === 'object'
-              ? `${restaurant.price.currency || '$'} ${restaurant.price.amount || 0}`
-              : String(restaurant.price || 'N/A'),
-          // Asegurar que cuisine es string
-          cuisine:
-            typeof restaurant.cuisine === 'object'
-              ? Array.isArray(restaurant.cuisine)
-                ? restaurant.cuisine.join(', ')
-                : JSON.stringify(restaurant.cuisine)
-              : String(restaurant.cuisine || 'Variada'),
-        }));
-
-        setRestaurants(formattedRestaurants);
-        setVisibleRestaurants(formattedRestaurants.slice(0, displayLimit));
+        setRestaurants(restaurantsData);
+        setVisibleRestaurants(restaurantsData.slice(0, displayLimit));
       } else {
         console.error('Restaurants data is not an array:', restaurantsData);
         setRestaurants([]);
@@ -73,8 +51,9 @@ const RestaurantsSection = () => {
     setVisibleRestaurants(restaurants.slice(0, newLimit));
   };
 
-  if (loading && restaurants.length === 0)
+  if (loading && restaurants.length === 0) {
     return <p className="text-center py-8">Cargando restaurantes...</p>;
+  }
 
   return (
     <section className="py-12 bg-gray-50">
@@ -116,26 +95,55 @@ const RestaurantsSection = () => {
                   <h3 className="text-xl font-semibold mb-2 line-clamp-2">
                     {restaurant.name}
                   </h3>
-                  {restaurant.cuisine && restaurant.cuisine !== 'N/A' && (
-                    <p className="text-gray-600 mb-1 text-sm">
-                      {restaurant.cuisine}
-                    </p>
-                  )}
+
+                  <p className="text-gray-600 mb-1 text-sm">
+                    {typeof restaurant.cuisine === 'string' &&
+                    !restaurant.cuisine.includes('{')
+                      ? restaurant.cuisine
+                      : 'Cocina Internacional'}
+                  </p>
+
                   <p className="text-gray-700 mb-1">
                     Precio: {restaurant.price}
                   </p>
+
                   <p className="text-gray-700 mb-3">
                     Rating: {restaurant.rating}
                   </p>
-                  {restaurant.image && restaurant.image !== 'N/A' && (
-                    <img
-                      src={restaurant.image}
-                      alt={restaurant.name}
-                      className="w-full h-40 object-cover rounded mb-3"
-                    />
-                  )}
+
+                  <div className="w-full h-40 overflow-hidden rounded mb-3 bg-gray-200">
+                    {restaurant.image &&
+                    restaurant.image !== 'N/A' &&
+                    typeof restaurant.image === 'string' &&
+                    !restaurant.image.includes('{') ? (
+                      <img
+                        src={restaurant.image}
+                        alt={restaurant.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src =
+                            'https://placehold.co/600x400/EEE/999?text=Restaurante';
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={`https://placehold.co/600x400/EEE/999?text=${encodeURIComponent(restaurant.name.substring(0, 15))}`}
+                        alt={restaurant.name}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+
                   <a
-                    href={restaurant.link}
+                    href={
+                      restaurant.link &&
+                      restaurant.link !== 'N/A' &&
+                      typeof restaurant.link === 'string' &&
+                      !restaurant.link.includes('zentrip')
+                        ? restaurant.link
+                        : `https://www.tripadvisor.com/Search?q=${encodeURIComponent(restaurant.name + ' restaurante Madrid')}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
