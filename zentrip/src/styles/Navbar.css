@@ -2,245 +2,136 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Contenedor principal */
-.navbar-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 50;
-  background-color: rgba(245, 242, 255, 0.95); /* Fondo lila claro semi-transparente, integrándose con el hero */
-  backdrop-filter: blur(8px); /* Efecto blur sutil para minimalismo */
-}
-
-/* Contenedor principal centrado */
-.container {
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 2rem; /* px-8 para más margen minimalista */
-  padding-right: 2rem; /* px-8 para más margen minimalista */
-  max-width: 80rem; /* max-w-7xl */
-}
-
-/* Desktop Navbar */
-nav.hidden.lg\:flex {
-  display: none;
-}
-
-@media (min-width: 1024px) { /* lg breakpoint */
-  nav.hidden.lg\:flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Aplicando estilos usando las clases de componentes de Tailwind */
+@layer components {
+  /* Estilos del contenedor principal de la barra de navegación */
+  .navbar-container {
+    @apply fixed top-0 left-0 right-0 z-50 bg-[#F5F2FFf2] backdrop-blur-md;
+    max-height: 50px;
   }
-}
 
-nav .flex.items-center.gap-12 {
-  display: flex;
-  align-items: center;
-  gap: 3rem; /* gap-12, mucho espacio para minimalismo */
-}
+  /* Contenedor principal centrado */
+  .container {
+    @apply mx-auto px-8 max-w-7xl;
+  }
 
-nav .flex.items-center a.flex.items-center.gap-2 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem; /* gap-2 */
-}
+  /* Desktop Navbar */
+  .desktop-nav {
+    @apply hidden lg:flex justify-between items-center py-2;
+  }
 
-nav .flex.items-center img.w-20 {
-  width: 5rem; /* w-20 */
-  height: 5rem; /* h-20 */
-}
+  /* Contenedor del logo y links de navegación */
+  .nav-logo-links {
+    @apply flex items-center gap-12;
+  }
 
-/* Links de navegación desktop */
-nav .flex.items-center .flex.space-x-6 a {
-  display: inline-flex;
-  height: 2.5rem; /* h-10 */
-  width: max-content; /* w-max */
-  align-items: center;
-  justify-content: center;
-  padding-left: 1rem; /* px-4 */
-  padding-right: 1rem; /* px-4 */
-  padding-top: 0.5rem; /* py-2 */
-  padding-bottom: 0.5rem; /* py-2 */
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 500; /* font-medium */
-  color: #3B325B; /* text-[#3B325B], violeta oscuro como especificaste */
-  transition-property: color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms; /* transición suave */
-  border-radius: 0; /* Sin borde redondeado para minimalismo */
-}
+  /* Enlace del logo */
+  .logo-link {
+    @apply flex items-center gap-2;
+  }
 
-nav .flex.items-center .flex.space-x-6 a:hover {
-  color: #3B325B; /* hover:text-[#3B325B]/80, violeta más claro */
-  background-color: transparent; /* Sin fondo para minimalismo */
-}
+  /* Imagen del logo */
+  .logo {
+    @apply w-20 h-20;
+  }
 
-/* Botones de autenticación desktop */
-nav .flex.gap-4 a {
-  display: inline-flex;
-  height: 2.25rem; /* h-9 */
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px; /* rounded-full, para botones circulares como en la imagen */
-  padding-left: 1rem; /* px-4 para más espacio interno */
-  padding-right: 1rem; /* px-4 para más espacio interno */
-  padding-top: 0.5rem; /* py-2 */
-  padding-bottom: 0.5rem; /* py-2 */
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 500; /* font-medium */
-  transition-property: color, background-color, border-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms; /* transición suave */
-}
+  /* Contenedor de links de navegación */
+  .nav-links {
+    @apply flex items-center space-x-6;
+  }
 
-nav .flex.gap-4 a:first-child {
-  border-width: 1px; /* border */
-  border-color: transparent; /* Sin borde inicial para minimalismo */
-  background-color: transparent; /* Sin fondo para minimalismo */
-  color: #2E2E2E; /* text-[#2E2E2E], gris oscuro como especificaste */
-}
+  /* Links de navegación desktop */
+  .nav-link {
+    @apply inline-flex h-10 w-max items-center justify-center px-4 py-2 text-sm font-medium text-[#3B325B] transition-colors hover:text-[#3B325B]/80;
+  }
 
-nav .flex.gap-4 a:first-child:hover {
-  border-color: transparent; /* Sin borde al hover para minimalismo */
-  background-color: #4A4A4A; /* hover:bg-[#4A4A4A], gris más brillante */
-  color: #ffffff; /* hover:text-white */
-}
+  /* Contenedor de botones de autenticación */
+  .auth-buttons {
+    @apply flex gap-4;
+  }
 
-nav .flex.gap-4 a:last-child {
-  border-width: 1px; /* border */
-  border-color: transparent; /* Sin borde inicial para minimalismo */
-  background-color: #2E2E2E; /* bg-[#2E2E2E], gris oscuro como especificaste */
-  color: #ffffff; /* text-white */
-}
+  /* Botón de inicio de sesión */
+  .login-button {
+    @apply inline-flex h-9 items-center justify-center rounded-full border border-transparent bg-transparent px-4 py-2 text-sm font-medium text-[#2E2E2E] hover:bg-[#4A4A4A] hover:text-white;
+  }
 
-nav .flex.gap-4 a:last-child:hover {
-  background-color: #4A4A4A; /* hover:bg-[#4A4A4A], gris más brillante */
-  color: #ffffff; /* hover:text-white */
-}
+  /* Botón de registro */
+  .signup-button {
+    @apply inline-flex h-9 items-center justify-center rounded-full bg-[#2E2E2E] px-4 py-2 text-sm font-medium text-white hover:bg-[#4A4A4A];
+  }
 
-/* Menú Móvil */
-.block.lg\:hidden .flex.items-center.justify-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+  /* Contenedor móvil */
+  .mobile-container {
+    @apply block lg:hidden;
+  }
 
-.block.lg\:hidden .flex.items-center.justify-between a.flex.items-center.gap-2 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem; /* gap-2 */
-}
+  /* Parte superior del menú móvil */
+  .mobile-top {
+    @apply flex items-center justify-between py-2;
+  }
 
-.block.lg\:hidden .flex.items-center.justify-between button {
-  padding: 0.5rem; /* p-2 */
-  border-width: 1px; /* border */
-  border-color: transparent; /* Sin borde para minimalismo */
-  background-color: transparent; /* Sin fondo para minimalismo */
-  border-radius: 0; /* Sin borde redondeado para minimalismo */
-  transition-property: color, border-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms; /* transición suave */
-}
+  /* Enlace del logo en móvil */
+  .mobile-logo-link {
+    @apply flex items-center gap-2;
+  }
 
-.block.lg\:hidden .flex.items-center.justify-between button:hover {
-  border-color: #D1D5DB; /* hover:border-gray-300 */
-  color: #3B325B; /* hover:text-[#3B325B] */
-}
+  /* Imagen del logo en móvil */
+  .mobile-logo {
+    @apply w-20 h-20;
+  }
 
-.block.lg\:hidden .flex.items-center.justify-between button svg {
-  width: 1.5rem; /* w-6 */
-  height: 1.5rem; /* h-6 */
-  color: #3B325B; /* text-[#3B325B], violeta oscuro como especificaste */
-}
+  /* Botón del menú en móvil */
+  .mobile-menu-button {
+    @apply p-2 bg-transparent border border-transparent hover:border-gray-300 rounded-full;
+  }
 
-/* Menú Móvil (panel lateral) */
-.fixed.inset-y-0.right-0.w-\[300px\] {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: 300px;
-  background-color: #ffffff; /* bg-white */
-  border-left-width: 1px; /* border-l */
-  border-color: #E5E7EB; /* border-gray-100, gris muy claro para minimalismo */
-  box-shadow: none; /* Sin sombra para minimalismo */
-  padding: 1.5rem; /* p-6 */
-}
+  /* Icono del menú */
+  .menu-icon {
+    @apply w-6 h-6 text-[#3B325B];
+  }
 
-.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-6 {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem; /* gap-6 */
-  margin-top: 1.5rem; /* mt-6 */
-}
+  /* Panel lateral del menú móvil */
+  .mobile-menu {
+    @apply fixed inset-y-0 right-0 w-[300px] bg-white border-l border-gray-100 shadow-md p-6;
+  }
 
-.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-4 a {
-  font-weight: 500; /* font-medium, menos pesado para minimalismo */
-  font-size: 0.875rem; /* text-sm */
-  padding-top: 0.5rem; /* py-2 */
-  padding-bottom: 0.5rem; /* py-2 */
-  color: #3B325B; /* text-[#3B325B], violeta oscuro como especificaste */
-}
+  /* Botón para cerrar el menú */
+  .close-button {
+    @apply absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100;
+  }
 
-.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-4 a:hover {
-  color: #3B325B; /* hover:text-[#3B325B]/80, violeta más claro */
-}
+  /* Icono para cerrar */
+  .close-icon {
+    @apply w-6 h-6 text-[#3B325B];
+  }
 
-.fixed.inset-y-0.right-0.w-\[300px\] .border-t.pt-4 {
-  border-top-width: 1px; /* border-t */
-  border-color: #E5E7EB; /* border-gray-100, gris muy claro para minimalismo */
-  padding-top: 1rem; /* pt-4 */
-}
+  /* Contenedor de enlaces en móvil */
+  .mobile-links-container {
+    @apply mt-12 flex flex-col gap-6;
+  }
 
-.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a {
-  display: inline-flex;
-  height: 2.25rem; /* h-9 */
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px; /* rounded-full, para botones circulares */
-  padding-left: 1rem; /* px-4 para más espacio interno */
-  padding-right: 1rem; /* px-4 para más espacio interno */
-  padding-top: 0.5rem; /* py-2 */
-  padding-bottom: 0.5rem; /* py-2 */
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 500; /* font-medium */
-  transition-property: color, background-color, border-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms; /* transición suave */
-}
+  /* Enlaces individuales en móvil */
+  .mobile-link {
+    @apply text-base font-medium text-[#3B325B] hover:text-[#3B325B]/80 py-2;
+  }
 
-.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a:first-child {
-  border-width: 1px; /* border */
-  border-color: transparent; /* Sin borde inicial para minimalismo */
-  background-color: transparent; /* Sin fondo para minimalismo */
-  color: #2E2E2E; /* text-[#2E2E2E], gris oscuro como especificaste */
-}
+  /* Contenedor de autenticación en móvil */
+  .mobile-auth-container {
+    @apply border-t pt-4 border-[#3B325B]/20;
+  }
 
-.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a:first-child:hover {
-  border-color: transparent; /* Sin borde al hover para minimalismo */
-  background-color: #4A4A4A; /* hover:bg-[#4A4A4A], gris más brillante */
-  color: #ffffff; /* hover:text-white */
-}
+  /* Botones de autenticación en móvil */
+  .mobile-auth-buttons {
+    @apply flex flex-col gap-3;
+  }
 
-.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a:last-child {
-  border-width: 1px; /* border */
-  border-color: transparent; /* Sin borde inicial para minimalismo */
-  background-color: #2E2E2E; /* bg-[#2E2E2E], gris oscuro como especificaste */
-  color: #ffffff; /* text-white */
-}
+  /* Botón de inicio de sesión en móvil */
+  .mobile-login {
+    @apply inline-flex h-9 items-center justify-center rounded-full border border-transparent bg-transparent px-4 py-2 text-sm font-medium text-[#2E2E2E] hover:bg-[#4A4A4A] hover:text-white;
+  }
 
-.fixed.inset-y-0.right-0.w-\[300px\] .flex.flex-col.gap-3 a:last-child:hover {
-  background-color: #4A4A4A; /* hover:bg-[#4A4A4A], gris más brillante */
-  color: #ffffff; /* hover:text-white */
-}
-
-/* Clases personalizadas para consistencia */
-.bg-muted {
-  background-color: #F5F2FF; /* bg-gray-100, lila claro para minimalismo */
-}
-
-.text-accent-foreground {
-  color: #3B325B; /* text-[#3B325B], violeta oscuro como especificaste */
+  /* Botón de registro en móvil */
+  .mobile-signup {
+    @apply inline-flex h-9 items-center justify-center rounded-full bg-[#2E2E2E] px-4 py-2 text-sm font-medium text-white hover:bg-[#4A4A4A];
+  }
 }
