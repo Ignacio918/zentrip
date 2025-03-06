@@ -8,6 +8,7 @@ const Chat = lazy(() => import('../components/Chat')); // Carga diferida
 import generateItinerary from '../cohereClient'; // Importamos la función
 import HotelsSection from '../components/HotelsSection';
 import RestaurantsSection from '../components/RestaurantsSection';
+import VacationRentalsSection from '../components/VacationRentalsSection';
 
 const Landing = () => {
   return (
