@@ -16,8 +16,30 @@ const RestaurantsSection = () => {
       const restaurantsData = await fetchRestaurants(location);
       console.log('Restaurants data received:', restaurantsData);
       if (Array.isArray(restaurantsData)) {
-        setRestaurants(restaurantsData);
-        setVisibleRestaurants(restaurantsData.slice(0, displayLimit));
+        // Aseguramos que cada restaurante tenga valores string para rating y price
+        const formattedRestaurants = restaurantsData.map((restaurant) => ({
+          ...restaurant,
+          // Convertir rating a string si es un objeto
+          rating:
+            typeof restaurant.rating === 'object'
+              ? `${restaurant.rating.subRating || 0}/${restaurant.rating.total || 5}`
+              : String(restaurant.rating || 'N/A'),
+          // Asegurar que price es string
+          price:
+            typeof restaurant.price === 'object'
+              ? `${restaurant.price.currency || '$'} ${restaurant.price.amount || 0}`
+              : String(restaurant.price || 'N/A'),
+          // Asegurar que cuisine es string
+          cuisine:
+            typeof restaurant.cuisine === 'object'
+              ? Array.isArray(restaurant.cuisine)
+                ? restaurant.cuisine.join(', ')
+                : JSON.stringify(restaurant.cuisine)
+              : String(restaurant.cuisine || 'Variada'),
+        }));
+
+        setRestaurants(formattedRestaurants);
+        setVisibleRestaurants(formattedRestaurants.slice(0, displayLimit));
       } else {
         console.error('Restaurants data is not an array:', restaurantsData);
         setRestaurants([]);
@@ -94,7 +116,7 @@ const RestaurantsSection = () => {
                   <h3 className="text-xl font-semibold mb-2 line-clamp-2">
                     {restaurant.name}
                   </h3>
-                  {restaurant.cuisine && (
+                  {restaurant.cuisine && restaurant.cuisine !== 'N/A' && (
                     <p className="text-gray-600 mb-1 text-sm">
                       {restaurant.cuisine}
                     </p>
@@ -105,7 +127,7 @@ const RestaurantsSection = () => {
                   <p className="text-gray-700 mb-3">
                     Rating: {restaurant.rating}
                   </p>
-                  {restaurant.image !== 'N/A' && (
+                  {restaurant.image && restaurant.image !== 'N/A' && (
                     <img
                       src={restaurant.image}
                       alt={restaurant.name}

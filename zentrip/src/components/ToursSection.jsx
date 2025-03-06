@@ -16,8 +16,23 @@ const ToursSection = () => {
       const toursData = await fetchTours(location);
       console.log('Tours data received in ToursSection:', toursData);
       if (Array.isArray(toursData)) {
-        setTours(toursData);
-        setVisibleTours(toursData.slice(0, displayLimit));
+        // Aseguramos que cada tour tenga valores string para rating y price
+        const formattedTours = toursData.map((tour) => ({
+          ...tour,
+          // Convertir rating a string si es un objeto
+          rating:
+            typeof tour.rating === 'object'
+              ? `${tour.rating.subRating || 0}/${tour.rating.total || 5}`
+              : String(tour.rating),
+          // Asegurar que price es string
+          price:
+            typeof tour.price === 'object'
+              ? `${tour.price.currency || '$'} ${tour.price.amount || 0}`
+              : String(tour.price),
+        }));
+
+        setTours(formattedTours);
+        setVisibleTours(formattedTours.slice(0, displayLimit));
       } else {
         console.error('Tours data is not an array:', toursData);
         setTours([]);
