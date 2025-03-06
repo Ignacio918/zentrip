@@ -12,7 +12,6 @@ const fetchTours = async (location) => {
     return [];
   }
 
-  // Simplificar parámetros: quitar checkIn y checkOut si no son necesarios
   try {
     const url = new URL(
       'https://real-time-tripadvisor-scraper-api.p.rapidapi.com/tripadvisor_tours_search_v2'
@@ -46,7 +45,7 @@ const fetchTours = async (location) => {
     console.log(
       'Raw data from RapidAPI (before mapping):',
       JSON.stringify(data, null, 2)
-    ); // JSON completo
+    );
 
     // Verificación estricta de la estructura
     let tours = [];

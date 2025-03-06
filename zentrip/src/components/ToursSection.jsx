@@ -4,15 +4,23 @@ import fetchTours from '../../api/get-tours';
 const ToursSection = () => {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const getTours = async () => {
       try {
+        setLoading(true);
         const toursData = await fetchTours('Madrid');
-        console.log('Tours data in ToursSection:', toursData);
-        setTours(toursData);
+        console.log('Tours data received in ToursSection:', toursData);
+        if (Array.isArray(toursData)) {
+          setTours(toursData);
+        } else {
+          console.error('Tours data is not an array:', toursData);
+          setTours([]);
+        }
       } catch (error) {
         console.error('Error in ToursSection:', error);
+        setError(error.message);
         setTours([]);
       } finally {
         setLoading(false);
@@ -22,6 +30,7 @@ const ToursSection = () => {
   }, []);
 
   if (loading) return <p>Cargando tours...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <section className="py-12 bg-gray-100">
