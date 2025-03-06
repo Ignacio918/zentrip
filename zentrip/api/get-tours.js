@@ -41,20 +41,24 @@ const fetchTours = async (location) => {
     }
 
     const data = await response.json();
-    console.log('Raw data from RapidAPI:', JSON.stringify(data, null, 2)); // Mostrar JSON completo
+    console.log('Raw data from RapidAPI:', JSON.stringify(data, null, 2)); // JSON completo y legible
 
-    // Mapeo genérico para evitar errores, ajustaremos con los datos reales
+    // Asegurarse de que devolvemos un array
     const tours = Array.isArray(data.data)
-      ? data.data.map((item) => ({
-          name: item.name || item.title || 'N/A',
-          price:
-            item.price || item.pricePerPerson || item.pricing?.adult || 'N/A',
-          rating: item.rating || item.ratingScore || 'N/A',
-          link: item.link || item.url || 'N/A',
-          image: item.thumbnail || item.images?.[0] || 'N/A',
-        }))
+      ? data.data.map((item) => {
+          console.log('Mapping item:', item); // Depuración adicional
+          return {
+            name: item.name || item.title || 'N/A',
+            price:
+              item.price || item.pricePerPerson || item.pricing?.adult || 'N/A',
+            rating: item.rating || item.ratingScore || 'N/A',
+            link: item.link || item.url || 'N/A',
+            image: item.thumbnail || item.images?.[0] || 'N/A',
+          };
+        })
       : [];
 
+    console.log('Mapped tours:', tours); // Verificar el array mapeado
     return tours;
   } catch (error) {
     console.error('Error in fetchTours:', {

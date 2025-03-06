@@ -9,6 +9,7 @@ const ToursSection = () => {
     const getTours = async () => {
       try {
         const toursData = await fetchTours('Madrid');
+        console.log('Tours data in ToursSection:', toursData); // Depuración
         setTours(toursData);
       } catch (error) {
         console.error('Error in ToursSection:', error);
