@@ -58,7 +58,8 @@ const ToursSection = () => {
         </div>
       ) : (
         <p className="text-center text-gray-600">
-          No hay tours disponibles en este momento.
+          No hay tours disponibles en este momento o error en el formato de
+          datos.
         </p>
       )}
     </section>

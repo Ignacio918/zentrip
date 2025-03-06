@@ -43,22 +43,42 @@ const fetchTours = async (location) => {
     const data = await response.json();
     console.log('Raw data from RapidAPI:', JSON.stringify(data, null, 2)); // JSON completo y legible
 
-    // Asegurarse de que devolvemos un array
-    const tours = Array.isArray(data.data)
-      ? data.data.map((item) => {
-          console.log('Mapping item:', item); // Depuración adicional
-          return {
-            name: item.name || item.title || 'N/A',
-            price:
-              item.price || item.pricePerPerson || item.pricing?.adult || 'N/A',
-            rating: item.rating || item.ratingScore || 'N/A',
-            link: item.link || item.url || 'N/A',
-            image: item.thumbnail || item.images?.[0] || 'N/A',
-          };
-        })
-      : [];
+    // Depuración de la estructura
+    console.log('Data structure:', {
+      isArray: Array.isArray(data),
+      hasData: !!data.data,
+      dataKeys: Object.keys(data),
+    });
 
-    console.log('Mapped tours:', tours); // Verificar el array mapeado
+    // Ajustar el mapeo según la estructura real
+    let tours = [];
+    if (Array.isArray(data.data)) {
+      tours = data.data.map((item) => {
+        console.log('Mapping item:', item);
+        return {
+          name: item.name || item.title || 'N/A',
+          price:
+            item.price || item.pricePerPerson || item.pricing?.adult || 'N/A',
+          rating: item.rating || item.ratingScore || 'N/A',
+          link: item.link || item.url || 'N/A',
+          image: item.thumbnail || item.images?.[0] || 'N/A',
+        };
+      });
+    } else if (data.data && typeof data.data === 'object') {
+      // Si data.data es un objeto, intentamos extraer un array de resultados (ajustar según el JSON)
+      tours = Object.values(data.data).map((item) => ({
+        name: item.name || item.title || 'N/A',
+        price:
+          item.price || item.pricePerPerson || item.pricing?.adult || 'N/A',
+        rating: item.rating || item.ratingScore || 'N/A',
+        link: item.link || item.url || 'N/A',
+        image: item.thumbnail || item.images?.[0] || 'N/A',
+      }));
+    } else {
+      console.warn('No valid data array found in response');
+    }
+
+    console.log('Mapped tours:', tours);
     return tours;
   } catch (error) {
     console.error('Error in fetchTours:', {
