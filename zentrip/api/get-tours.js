@@ -1,10 +1,12 @@
 export default async function handler(req, res) {
   const { location } = req.query;
 
+  console.log('Starting get-tours...');
   console.log(
-    'API Key in use:',
+    'API Key:',
     process.env.RAPIDAPI_KEY_TRIPADVISOR ? 'Present' : 'Missing'
   );
+  console.log('Location received:', location);
 
   if (!location) {
     return res.status(400).json({ error: 'Location is required' });
@@ -19,6 +21,8 @@ export default async function handler(req, res) {
     url.searchParams.append('lang', 'en_US');
     url.searchParams.append('limit', '5');
 
+    console.log('Request URL:', url.toString());
+
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
@@ -28,11 +32,16 @@ export default async function handler(req, res) {
       },
     });
 
+    console.log('Response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`RapidAPI error: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`RapidAPI error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Raw data:', data);
+
     const tours = data.data.map((item) => ({
       name: item.name,
       price: item.price || 'N/A',
@@ -44,18 +53,16 @@ export default async function handler(req, res) {
     return res.status(200).json({
       status: true,
       message: `Found ${tours.length} tours in ${location}`,
-      timestamp: Date.now(),
       data: { list: tours },
     });
   } catch (error) {
-    console.error('Error fetching tours:', {
+    console.error('Error in get-tours:', {
       message: error.message,
-      status: error.response?.status || 'N/A',
+      stack: error.stack,
     });
     return res.status(500).json({
       error: 'Failed to fetch tours',
       details: error.message,
-      status: error.response?.status || 'N/A',
     });
   }
 }
