@@ -151,32 +151,31 @@ const RestaurantsSection = ({ initialLocation }) => {
               {visibleRestaurants.map((restaurant, index) => (
                 <div
                   key={index}
-                  className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition"
+                  className="bg-white rounded-lg shadow hover:shadow-lg transition h-full flex flex-col"
                 >
-                  <h3 className="text-xl font-semibold mb-2 line-clamp-2">
-                    {restaurant.name}
-                  </h3>
+                  <div className="p-4 flex flex-col flex-grow">
+                    <h3 className="text-xl font-semibold mb-2 line-clamp-2 h-14">
+                      {restaurant.name}
+                    </h3>
 
-                  <p className="text-gray-600 mb-1 text-sm">
-                    {typeof restaurant.cuisine === 'string' &&
-                    !restaurant.cuisine.includes('{')
-                      ? restaurant.cuisine
-                      : 'Cocina Internacional'}
-                  </p>
+                    <div className="mb-3">
+                      <p className="text-gray-600 mb-1 text-sm">
+                        {typeof restaurant.cuisine === 'string' &&
+                        !restaurant.cuisine.includes('{')
+                          ? restaurant.cuisine
+                          : 'Cocina Internacional'}
+                      </p>
 
-                  <p className="text-gray-700 mb-1">
-                    Precio: {restaurant.price}
-                  </p>
+                      <p className="text-gray-700 mb-1">
+                        Precio: {restaurant.price}
+                      </p>
 
-                  <p className="text-gray-700 mb-3">
-                    Rating: {restaurant.rating}
-                  </p>
+                      <p className="text-gray-700">
+                        Rating: {restaurant.rating}
+                      </p>
+                    </div>
 
-                  <div className="w-full h-40 overflow-hidden rounded mb-3 bg-gray-200">
-                    {restaurant.image &&
-                    restaurant.image !== 'N/A' &&
-                    typeof restaurant.image === 'string' &&
-                    !restaurant.image.includes('{') ? (
+                    <div className="w-full h-48 overflow-hidden rounded mb-3 mt-auto">
                       <img
                         src={restaurant.image}
                         alt={restaurant.name}
@@ -187,30 +186,17 @@ const RestaurantsSection = ({ initialLocation }) => {
                             'https://placehold.co/600x400/EEE/999?text=Restaurante';
                         }}
                       />
-                    ) : (
-                      <img
-                        src={`https://placehold.co/600x400/EEE/999?text=${encodeURIComponent(restaurant.name.substring(0, 15))}`}
-                        alt={restaurant.name}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
+                    </div>
 
-                  <a
-                    href={
-                      restaurant.link &&
-                      restaurant.link !== 'N/A' &&
-                      typeof restaurant.link === 'string' &&
-                      !restaurant.link.includes('zentrip')
-                        ? restaurant.link
-                        : `https://www.tripadvisor.com/Search?q=${encodeURIComponent(restaurant.name + ' restaurante ' + searchLocation)}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                  >
-                    Ver detalles
-                  </a>
+                    <a
+                      href={restaurant.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-auto inline-block w-full text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                    >
+                      Ver detalles
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>

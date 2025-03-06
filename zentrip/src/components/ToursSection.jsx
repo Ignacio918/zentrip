@@ -16,7 +16,7 @@ const ToursSection = ({ initialLocation }) => {
     // Simulamos una petición de red
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Creamos datos de ejemplo
+    // Creamos datos de ejemplo con imágenes consistentes
     return [
       {
         name: 'Free Walking Tour Madrid',
@@ -146,19 +146,18 @@ const ToursSection = ({ initialLocation }) => {
               {visibleTours.map((tour, index) => (
                 <div
                   key={index}
-                  className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition"
+                  className="bg-white rounded-lg shadow hover:shadow-lg transition h-full flex flex-col"
                 >
-                  <h3 className="text-xl font-semibold mb-2 line-clamp-2">
-                    {tour.name}
-                  </h3>
-                  <p className="text-gray-700 mb-1">Precio: {tour.price}</p>
-                  <p className="text-gray-700 mb-3">Rating: {tour.rating}</p>
+                  <div className="p-4 flex flex-col flex-grow">
+                    <h3 className="text-xl font-semibold mb-2 line-clamp-2 h-14">
+                      {tour.name}
+                    </h3>
+                    <div className="mb-3">
+                      <p className="text-gray-700 mb-1">Precio: {tour.price}</p>
+                      <p className="text-gray-700">Rating: {tour.rating}</p>
+                    </div>
 
-                  <div className="w-full h-40 overflow-hidden rounded mb-3 bg-gray-200">
-                    {tour.image &&
-                    tour.image !== 'N/A' &&
-                    typeof tour.image === 'string' &&
-                    !tour.image.includes('{') ? (
+                    <div className="w-full h-48 overflow-hidden rounded mb-3 mt-auto">
                       <img
                         src={tour.image}
                         alt={tour.name}
@@ -169,30 +168,17 @@ const ToursSection = ({ initialLocation }) => {
                             'https://placehold.co/600x400/EEE/999?text=Tour';
                         }}
                       />
-                    ) : (
-                      <img
-                        src={`https://placehold.co/600x400/EEE/999?text=${encodeURIComponent(tour.name.substring(0, 15))}`}
-                        alt={tour.name}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
+                    </div>
 
-                  <a
-                    href={
-                      tour.link &&
-                      tour.link !== 'N/A' &&
-                      typeof tour.link === 'string' &&
-                      !tour.link.includes('zentrip')
-                        ? tour.link
-                        : `https://www.tripadvisor.com/Search?q=${encodeURIComponent(tour.name + ' ' + searchLocation)}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                  >
-                    Ver detalles
-                  </a>
+                    <a
+                      href={tour.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-auto inline-block w-full text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                    >
+                      Ver detalles
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>

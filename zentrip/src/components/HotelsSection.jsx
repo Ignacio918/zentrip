@@ -150,34 +150,35 @@ const HotelsSection = ({ initialLocation }) => {
               {visibleHotels.map((hotel, index) => (
                 <div
                   key={index}
-                  className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition"
+                  className="bg-white rounded-lg shadow hover:shadow-lg transition h-full flex flex-col"
                 >
-                  <h3 className="text-xl font-semibold mb-2 line-clamp-2">
-                    {hotel.name}
-                  </h3>
-                  {hotel.stars &&
-                    hotel.stars !== 'N/A' &&
-                    !isNaN(parseFloat(hotel.stars)) && (
-                      <p className="text-yellow-500 mb-1">
-                        {'★'.repeat(Math.round(parseFloat(hotel.stars)) || 0)}
-                      </p>
-                    )}
-                  <p className="text-gray-700 mb-1">Desde: {hotel.price}</p>
-                  <p className="text-gray-700 mb-3">Rating: {hotel.rating}</p>
+                  <div className="p-4 flex flex-col flex-grow">
+                    <h3 className="text-xl font-semibold mb-2 line-clamp-2 h-14">
+                      {hotel.name}
+                    </h3>
+                    <div className="mb-3">
+                      {hotel.stars &&
+                        hotel.stars !== 'N/A' &&
+                        !isNaN(parseFloat(hotel.stars)) && (
+                          <p className="text-yellow-500 mb-1">
+                            {'★'.repeat(
+                              Math.round(parseFloat(hotel.stars)) || 0
+                            )}
+                          </p>
+                        )}
+                      <p className="text-gray-700 mb-1">Desde: {hotel.price}</p>
+                      <p className="text-gray-700">Rating: {hotel.rating}</p>
+                    </div>
 
-                  <p className="text-gray-600 mb-2 text-sm truncate">
-                    {typeof hotel.address === 'string' &&
-                    !hotel.address.includes('{') &&
-                    !hotel.address.includes('[')
-                      ? hotel.address
-                      : `${searchLocation}, España`}
-                  </p>
+                    <p className="text-gray-600 mb-2 text-sm truncate">
+                      {typeof hotel.address === 'string' &&
+                      !hotel.address.includes('{') &&
+                      !hotel.address.includes('[')
+                        ? hotel.address
+                        : `${searchLocation}, España`}
+                    </p>
 
-                  <div className="w-full h-40 overflow-hidden rounded mb-3 bg-gray-200">
-                    {hotel.image &&
-                    hotel.image !== 'N/A' &&
-                    typeof hotel.image === 'string' &&
-                    !hotel.image.includes('{') ? (
+                    <div className="w-full h-48 overflow-hidden rounded mb-3 mt-auto">
                       <img
                         src={hotel.image}
                         alt={hotel.name}
@@ -188,30 +189,17 @@ const HotelsSection = ({ initialLocation }) => {
                             'https://placehold.co/600x400/EEE/999?text=Hotel';
                         }}
                       />
-                    ) : (
-                      <img
-                        src={`https://placehold.co/600x400/EEE/999?text=${encodeURIComponent(hotel.name.substring(0, 15))}`}
-                        alt={hotel.name}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
+                    </div>
 
-                  <a
-                    href={
-                      hotel.link &&
-                      hotel.link !== 'N/A' &&
-                      typeof hotel.link === 'string' &&
-                      !hotel.link.includes('zentrip')
-                        ? hotel.link
-                        : `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotel.name + ' ' + searchLocation)}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                  >
-                    Ver detalles
-                  </a>
+                    <a
+                      href={hotel.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-auto inline-block w-full text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                    >
+                      Ver detalles
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>
