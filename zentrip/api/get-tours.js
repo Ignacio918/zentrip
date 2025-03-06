@@ -52,13 +52,26 @@ const fetchTours = async (location) => {
     if (data && typeof data === 'object' && Array.isArray(data.data)) {
       tours = data.data.map((item) => {
         console.log('Mapping item:', item);
+
+        // Formato correcto para el precio (convertir objeto a string)
+        let formattedPrice = 'N/A';
+        if (
+          item.price &&
+          typeof item.price === 'object' &&
+          item.price.currency &&
+          item.price.total
+        ) {
+          formattedPrice = `${item.price.currency} ${item.price.total}`;
+        } else if (typeof item.price === 'string') {
+          formattedPrice = item.price;
+        }
+
         return {
           name: item.name || item.title || 'N/A',
-          price:
-            item.price || item.pricePerPerson || item.pricing?.adult || 'N/A',
+          price: formattedPrice,
           rating: item.rating || item.ratingScore || 'N/A',
           link: item.link || item.url || 'N/A',
-          image: item.thumbnail || item.images?.[0] || 'N/A',
+          image: item.thumbnail || item.image || item.photos?.[0] || 'N/A',
         };
       });
     } else if (data && typeof data === 'object') {
@@ -68,16 +81,26 @@ const fetchTours = async (location) => {
         if (Array.isArray(data[key])) {
           tours = data[key].map((item) => {
             console.log('Mapping item from alternative key:', item);
+
+            // Formato correcto para el precio (convertir objeto a string)
+            let formattedPrice = 'N/A';
+            if (
+              item.price &&
+              typeof item.price === 'object' &&
+              item.price.currency &&
+              item.price.total
+            ) {
+              formattedPrice = `${item.price.currency} ${item.price.total}`;
+            } else if (typeof item.price === 'string') {
+              formattedPrice = item.price;
+            }
+
             return {
               name: item.name || item.title || 'N/A',
-              price:
-                item.price ||
-                item.pricePerPerson ||
-                item.pricing?.adult ||
-                'N/A',
+              price: formattedPrice,
               rating: item.rating || item.ratingScore || 'N/A',
               link: item.link || item.url || 'N/A',
-              image: item.thumbnail || item.images?.[0] || 'N/A',
+              image: item.thumbnail || item.image || item.photos?.[0] || 'N/A',
             };
           });
           break;
@@ -86,13 +109,26 @@ const fetchTours = async (location) => {
       if (tours.length === 0 && data.data) {
         tours = Object.values(data.data).map((item) => {
           console.log('Mapping item from Object.values:', item);
+
+          // Formato correcto para el precio (convertir objeto a string)
+          let formattedPrice = 'N/A';
+          if (
+            item.price &&
+            typeof item.price === 'object' &&
+            item.price.currency &&
+            item.price.total
+          ) {
+            formattedPrice = `${item.price.currency} ${item.price.total}`;
+          } else if (typeof item.price === 'string') {
+            formattedPrice = item.price;
+          }
+
           return {
             name: item.name || item.title || 'N/A',
-            price:
-              item.price || item.pricePerPerson || item.pricing?.adult || 'N/A',
+            price: formattedPrice,
             rating: item.rating || item.ratingScore || 'N/A',
             link: item.link || item.url || 'N/A',
-            image: item.thumbnail || item.images?.[0] || 'N/A',
+            image: item.thumbnail || item.image || item.photos?.[0] || 'N/A',
           };
         });
       }
