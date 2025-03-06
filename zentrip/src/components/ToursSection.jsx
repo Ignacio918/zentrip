@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import fetchTours from '../../api/get-tours'; // Ajustá la ruta según tu estructura
+import fetchTours from '../../api/get-tours';
 
 const ToursSection = () => {
   const [tours, setTours] = useState([]);
