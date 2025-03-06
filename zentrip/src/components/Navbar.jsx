@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import logoSmall from '../assets/logo_small.svg';
 import '../styles/Navbar.css';
@@ -12,6 +12,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
+  const navigate = useNavigate();
 
   // Definimos los elementos de navegación manteniendo la estructura original
   const navItems = [
@@ -71,6 +72,12 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  // Manejar la navegación directamente
+  const handleNavigation = (path, e) => {
+    e.preventDefault();
+    navigate(path);
+  };
+
   return (
     <AnimatePresence mode="wait">
       {isVisible && (
@@ -81,51 +88,62 @@ const Navbar = () => {
           transition={{ duration: 0.3 }}
           className="navbar-container"
         >
-          <div className="container">
-            <nav className="desktop-nav">
-              <div className="nav-logo-links">
-                <Link to="/" className="logo-link">
-                  <img src={logoSmall} className="logo" alt="zentrip logo" />
+          <div className="container mx-auto px-8">
+            <nav className="hidden lg:flex justify-between items-center py-2">
+              <div className="flex items-center gap-12">
+                <Link to="/" className="flex items-center gap-2">
+                  <img
+                    src={logoSmall}
+                    className="w-20 h-20"
+                    alt="zentrip logo"
+                  />
                 </Link>
-                <div className="nav-links">
+                <div className="flex items-center space-x-6">
                   {navItems.map((item) => (
-                    <motion.Link
+                    <a
                       key={item.name}
-                      to={item.link}
-                      className="nav-link"
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ duration: 0.2 }}
+                      href={item.link}
+                      onClick={(e) => handleNavigation(item.link, e)}
+                      className="inline-flex h-10 w-max items-center justify-center px-4 py-2 text-sm font-medium text-[#3B325B] hover:bg-gray-100 rounded-md transition-colors"
                     >
                       {item.name}
-                    </motion.Link>
+                    </a>
                   ))}
                 </div>
               </div>
-              <div className="auth-buttons">
-                <Link to={auth.login.url} className="login-button">
+              <div className="flex gap-4">
+                <a
+                  href={auth.login.url}
+                  onClick={(e) => handleNavigation(auth.login.url, e)}
+                  className="inline-flex h-9 items-center justify-center rounded-full border border-transparent bg-transparent px-4 py-2 text-sm font-medium text-[#2E2E2E] hover:bg-[#4A4A4A] hover:text-white"
+                >
                   {auth.login.text}
-                </Link>
-                <Link to={auth.signup.url} className="signup-button">
+                </a>
+                <a
+                  href={auth.signup.url}
+                  onClick={(e) => handleNavigation(auth.signup.url, e)}
+                  className="inline-flex h-9 items-center justify-center rounded-full bg-[#2E2E2E] px-4 py-2 text-sm font-medium text-white hover:bg-[#4A4A4A]"
+                >
                   {auth.signup.text}
-                </Link>
+                </a>
               </div>
             </nav>
-            <div className="mobile-container">
-              <div className="mobile-top">
-                <Link to="/" className="mobile-logo-link">
+            <div className="block lg:hidden">
+              <div className="flex items-center justify-between py-2">
+                <Link to="/" className="flex items-center gap-2">
                   <img
                     src={logoSmall}
-                    className="mobile-logo"
+                    className="w-20 h-20"
                     alt="zentrip logo"
                   />
                 </Link>
                 <button
                   ref={buttonRef}
-                  className="mobile-menu-button"
+                  className="p-2 bg-transparent border border-transparent hover:border-gray-300 rounded-full"
                   onClick={toggleMenu}
                   aria-label="Menu"
                 >
-                  <Menu className="menu-icon" />
+                  <Menu className="w-6 h-6 text-[#3B325B]" />
                 </button>
               </div>
               <AnimatePresence>
@@ -141,14 +159,14 @@ const Navbar = () => {
                       stiffness: 300,
                       damping: 30,
                     }}
-                    className="mobile-menu"
+                    className="fixed inset-y-0 right-0 w-[300px] bg-white border-l border-gray-100 shadow-md p-6"
                   >
                     <button
                       onClick={() => setIsMenuOpen(false)}
-                      className="close-button"
+                      className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
                     >
                       <svg
-                        className="close-icon"
+                        className="w-6 h-6 text-[#3B325B]"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -161,35 +179,42 @@ const Navbar = () => {
                         />
                       </svg>
                     </button>
-                    <div className="mobile-links-container">
+                    <div className="mt-12 flex flex-col gap-6">
                       {navItems.map((item) => (
-                        <motion.Link
+                        <a
                           key={item.name}
-                          to={item.link}
-                          className="mobile-link"
-                          onClick={() => setIsMenuOpen(false)}
-                          whileHover={{ x: 5 }}
-                          transition={{ duration: 0.2 }}
+                          href={item.link}
+                          onClick={(e) => {
+                            handleNavigation(item.link, e);
+                            setIsMenuOpen(false);
+                          }}
+                          className="text-base font-medium text-[#3B325B] hover:text-[#3B325B]/80 hover:bg-gray-100 rounded-md py-2 px-3"
                         >
                           {item.name}
-                        </motion.Link>
+                        </a>
                       ))}
-                      <div className="mobile-auth-container">
-                        <div className="mobile-auth-buttons">
-                          <Link
-                            to={auth.login.url}
-                            className="mobile-login"
-                            onClick={() => setIsMenuOpen(false)}
+                      <div className="border-t pt-4 border-[#3B325B]/20">
+                        <div className="flex flex-col gap-3">
+                          <a
+                            href={auth.login.url}
+                            onClick={(e) => {
+                              handleNavigation(auth.login.url, e);
+                              setIsMenuOpen(false);
+                            }}
+                            className="inline-flex h-9 items-center justify-center rounded-full border border-transparent bg-transparent px-4 py-2 text-sm font-medium text-[#2E2E2E] hover:bg-[#4A4A4A] hover:text-white"
                           >
                             {auth.login.text}
-                          </Link>
-                          <Link
-                            to={auth.signup.url}
-                            className="mobile-signup"
-                            onClick={() => setIsMenuOpen(false)}
+                          </a>
+                          <a
+                            href={auth.signup.url}
+                            onClick={(e) => {
+                              handleNavigation(auth.signup.url, e);
+                              setIsMenuOpen(false);
+                            }}
+                            className="inline-flex h-9 items-center justify-center rounded-full bg-[#2E2E2E] px-4 py-2 text-sm font-medium text-white hover:bg-[#4A4A4A]"
                           >
                             {auth.signup.text}
-                          </Link>
+                          </a>
                         </div>
                       </div>
                     </div>
