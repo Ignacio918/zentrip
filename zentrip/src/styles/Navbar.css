@@ -6,8 +6,8 @@
 @layer components {
   /* Estilos del contenedor principal de la barra de navegación */
   .navbar-container {
-    @apply fixed top-0 left-0 right-0 z-50 bg-[#F5F2FFf2] backdrop-blur-md;
-    max-height: 50px;
+    @apply fixed top-0 left-0 right-0 z-50 bg-[#F5F2FFf2] backdrop-blur-md px-8;
+    max-height: 70px;
   }
 
   /* Contenedor principal centrado */
