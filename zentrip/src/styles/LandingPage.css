@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 .hero-section {
-  @apply w-full min-h-screen bg-[#F5F2FF] flex justify-center items-center px-8 pt-24;
+  @apply w-full min-h-screen bg-[#F5F2FF] flex justify-center items-center px-8 pt-44;
 }
 
 .hero-content {
